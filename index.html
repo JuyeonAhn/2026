@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>반응형 배너 가이드</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 배너 레이블 규칙: 1장 = banner.jpg (slides에 1개만 두기) | 여러 장 = banner_1.jpg, banner_2.jpg, banner_3.jpg … -->
+  <script type="application/json" id="banner-config">
+  {
+    "slides": [
+      { "image": "banner_1.jpg", "title": "환상의 밤, 빛나는 숲속 이야기", "sub": "몽환적인 발광 식물과 신비로운 생명들이 당신을 기다립니다." },
+      { "image": "banner_2.jpg", "title": "1천→2천피 18년 걸렸는데…5천→6천피는 ‘18거래일’, 8천도 가능하다는데", "sub": "1천→2천피 18년 걸렸는데…5천→6천피는 ‘18거래일’, 8천도 가능하다는데" },
+      { "image": "banner_3.jpg", "title": "LA갈비야? 베이컨이야?", "sub": "앞서 한 홈쇼핑 채널에서는 설 연휴를 앞두고 ‘임성근 LA 갈비’를 판매했다. 최근 임성근 셰프는 음주운전 등 전과가 6회 있다는 사실이 알려지며 논란이 확산되자 방송 활동을 전면 중단했다. 다만 홈쇼핑 방송에 대해서는 “저로 인해 중소기업 대표님들이 피해를 봐선 안 된다고 생각한다”라며 계약 기간까지는 강행하겠다는 뜻을 밝힌 바 있다." }
+    ]
+  }
+  </script>
+
+  <div class="banner-case">
+    <div class="banner-slider" role="region" aria-label="메인 배너">
+      <div class="banner-track">
+        <!-- 슬라이드는 script에서 설정(banner-config) 기반으로 생성됩니다. 설정 없을 때만 아래 예시 사용 -->
+        <section class="banner-slide" data-slide="0">
+          <div class="banner-bg">
+            <div class="banner-gradient"></div>
+            <img class="banner-image" src="banner.jpg" alt="" aria-hidden="true" onerror="this.style.display='none'">
+          </div>
+          <div class="banner-content">
+            <h2 class="banner-title" data-max="30">환상의 밤, 빛나는 숲속 이야기</h2>
+            <p class="banner-sub" data-max="50">몽환적인 발광 식물과 신비로운 생명들이 당신을 기다립니다.</p>
+          </div>
+        </section>
+      </div>
+      <button type="button" class="banner-btn banner-prev" aria-label="이전 배너">
+        <span aria-hidden="true">‹</span>
+      </button>
+      <button type="button" class="banner-btn banner-next" aria-label="다음 배너">
+        <span aria-hidden="true">›</span>
+      </button>
+      <div class="banner-indicators" role="tablist" aria-label="배너 인디케이터"></div>
+    </div>
+
+    <section class="production-guide" aria-label="배너 제작 가이드">
+      <h2 class="guide-heading">배너 제작 가이드</h2>
+      <p class="guide-intro">위 미리보기는 업로드한 이미지·텍스트가 실제 노출되는 형태입니다. 아래 규칙을 준수해 제작해 주세요.</p>
+
+      <dl class="guide-list">
+        <dt>파일명 규칙 (레이블)</dt>
+        <dd>
+          <ul>
+            <li><strong>1장만 사용:</strong> <code>banner.jpg</code> (또는 <code>banner_1.jpg</code>)</li>
+            <li><strong>여러 장 사용:</strong> <code>banner_1.jpg</code>, <code>banner_2.jpg</code>, <code>banner_3.jpg</code> … 순서대로 번호 부여</li>
+            <li>이미지와 함께 사용할 타이틀·서브 카피는 이 페이지 상단의 <code>#banner-config</code> 설정에서 수정할 수 있습니다.</li>
+          </ul>
+        </dd>
+
+        <dt>브레이크포인트 및 크기</dt>
+        <dd>
+          <ul>
+            <li><strong>1194px 이상:</strong> 배너 높이 300px 고정. 타이틀 32px, 서브 24px. 텍스트 좌측 정렬, 좌측 패딩 120px.</li>
+            <li><strong>769px ~ 1193px:</strong> 높이 260px. 타이틀 22px, 서브 15px. 좌측 정렬. 좌우 이동 버튼과 겹치지 않도록 패딩 88px.</li>
+            <li><strong>768px 이하:</strong> 이미지 영역(상단)과 텍스트 영역(하단) 분리. 타이틀 20px, 서브 14px. 텍스트 가운데 정렬.</li>
+            <li><strong>480px 이하:</strong> 이미지 높이 200px. 타이틀 18px, 서브 13px.</li>
+          </ul>
+        </dd>
+
+        <dt>텍스트 제한</dt>
+        <dd>
+          <ul>
+            <li><strong>타이틀:</strong> 30자 제한 (초과 시 말줄임 … 처리)</li>
+            <li><strong>서브 카피:</strong> 50자 제한 (초과 시 말줄임 … 처리)</li>
+          </ul>
+        </dd>
+
+        <dt>배경·딤드 그라데이션</dt>
+        <dd>
+          <ul>
+            <li>각 슬라이드 이미지에서 <strong>주조색을 추출</strong>해 배경색으로 사용합니다. 동일 이미지면 항상 같은 색이 나오도록 안정화되어 있습니다.</li>
+            <li><strong>1194px 이상 / 769~1193px:</strong> 딤드 그라데이션은 화면 너비의 <strong>좌측 50%</strong>만 적용. 좌(높은 오퍼시티) → 중간(투명)으로 자연스럽게 이어짐.</li>
+            <li><strong>768px 이하:</strong> 이미지 하단 1/3만 딤드 그라데이션 적용. 상단 2/3는 이미지가 그대로 노출되며, 텍스트 영역과 색으로 자연스럽게 연결.</li>
+          </ul>
+        </dd>
+
+        <dt>슬라이드 동작</dt>
+        <dd>
+          <ul>
+            <li><strong>무한 루핑:</strong> 마지막 장에서 다음 버튼 → 첫 장으로, 첫 장에서 이전 버튼 → 마지막 장으로 끊김 없이 이어짐.</li>
+            <li>좌우 이동 버튼과 하단 인디케이터로 이동 가능. 인디케이터는 현재 보고 있는 실제 슬라이드 번호와 동기화됩니다.</li>
+          </ul>
+        </dd>
+      </dl>
+    </section>
+  </div>
+
+  <footer class="guide-footer">
+    <p>배너 파일을 프로젝트 폴더에 넣고, 위 <code>#banner-config</code>에서 이미지 파일명·타이틀·서브를 수정하면 미리보기에 반영됩니다.</p>
+  </footer>
+  <script src="script.js"></script>
+</body>
+</html>

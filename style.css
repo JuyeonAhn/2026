@@ -1,0 +1,472 @@
+/* ============================================
+   반응형 배너 가이드 — 주요 컬러 (이미지 추출)
+   rgb(38, 42, 77) → #262a4d
+   rgb(33, 53, 79) → #21354f
+   ============================================ */
+
+:root {
+  --banner-bg-primary: #262a4d;
+  --banner-bg-deep: #21354f;
+  --banner-text: #ffffff;
+  --banner-sub: rgba(255, 255, 255, 0.9);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  background: #1a1d2e;
+  color: #eee;
+  min-height: 100vh;
+}
+
+/* --------------------------------------------
+   슬라이더 래퍼
+-------------------------------------------- */
+.banner-slider {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.banner-track {
+  display: flex;
+  transition: transform 0.45s ease-in-out;
+  will-change: transform;
+}
+
+.banner-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 0;
+}
+
+/* --------------------------------------------
+   배너 컨테이너 (1194px 이상: 높이 300px)
+-------------------------------------------- */
+.banner-slide {
+  position: relative;
+  min-height: 300px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+/* 슬라이드별 배경: --slide-bg (R,G,B)는 JS에서 이미지 추출 컬러로 설정, 미설정 시 첫 번째 이미지 컬러 */
+.banner-slide {
+  --slide-bg: 38, 42, 77;
+}
+
+.banner-bg {
+  position: absolute;
+  inset: 0;
+  background-color: rgb(var(--slide-bg, 38, 42, 77));
+}
+
+.banner-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* 배경과 이미지 갭 — 딤드 그라데이션: 슬라이드별 --slide-bg 사용 */
+.banner-gradient {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  max-width: 50vw;
+  background: linear-gradient(
+    90deg,
+    rgba(var(--slide-bg, 38, 42, 77), 0.95) 0%,
+    rgba(var(--slide-bg, 38, 42, 77), 0.7) 25%,
+    rgba(var(--slide-bg, 38, 42, 77), 0.4) 60%,
+    rgba(var(--slide-bg, 38, 42, 77), 0) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+.banner-content {
+  position: relative;
+  z-index: 2;
+  padding-left: 120px;
+  padding-right: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 300px;
+  max-width: 100%;
+}
+
+.banner-title {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--banner-text);
+  max-width: 100%;
+}
+
+.banner-sub {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--banner-sub);
+  max-width: 100%;
+}
+
+/* 1194px 이상: 타이틀 32px, 서브 24px */
+@media (min-width: 1194px) {
+  .banner-title {
+    font-size: 32px;
+  }
+
+  .banner-sub {
+    font-size: 24px;
+  }
+}
+
+/* 이미지 없을 때 배경만 보이도록 */
+.banner-bg:has(.banner-image[src=""]) .banner-image,
+.banner-image:not([src]),
+.banner-image[src=""] {
+  opacity: 0;
+}
+
+/* --------------------------------------------
+   1193px 이하 — 태블릿 (이미지·텍스트 분리 전까지는 좌측 정렬 유지)
+-------------------------------------------- */
+@media (max-width: 1193px) {
+  .banner-slide {
+    min-height: 260px;
+  }
+
+  .banner-content {
+    padding-left: 48px;
+    padding-right: 24px;
+    min-height: 260px;
+  }
+
+  .banner-title {
+    font-size: 22px;
+  }
+
+  .banner-sub {
+    font-size: 15px;
+  }
+}
+
+/* --------------------------------------------
+   모바일 (768px 이하): 이미지 상단 / 텍스트 하단 분리, 동일 너비 유지
+-------------------------------------------- */
+@media (max-width: 768px) {
+  .banner-slide {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: auto;
+  }
+
+  .banner-bg {
+    position: relative;
+    height: 220px;
+    min-height: 220px;
+    flex-shrink: 0;
+  }
+
+  .banner-image {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* 모바일: 이미지 하단 1/3만 딤드 그라데이션 — 슬라이드별 --slide-bg 사용 */
+  .banner-gradient {
+    display: block;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: none;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      transparent 66.67%,
+      rgba(var(--slide-bg, 38, 42, 77), 0.4) 80%,
+      rgb(var(--slide-bg, 38, 42, 77)) 100%
+    );
+  }
+
+  .banner-content {
+    width: 100%;
+    min-height: 0;
+    padding: 24px 24px 28px;
+    background-color: rgb(var(--slide-bg, 38, 42, 77));
+    box-sizing: border-box;
+    text-align: center;
+    align-items: center;
+  }
+
+  .banner-title {
+    font-size: 20px;
+  }
+
+  .banner-sub {
+    font-size: 14px;
+  }
+}
+
+/* --------------------------------------------
+   소형 모바일 (480px 이하)
+-------------------------------------------- */
+@media (max-width: 480px) {
+  .banner-bg {
+    height: 200px;
+    min-height: 200px;
+  }
+
+  .banner-content {
+    padding: 20px 16px 24px;
+  }
+
+  .banner-title {
+    font-size: 18px;
+  }
+
+  .banner-sub {
+    font-size: 13px;
+  }
+}
+
+/* 1194px 이상에서만 높이 300px 고정 */
+@media (min-width: 1194px) {
+  .banner-slide {
+    height: 300px;
+    min-height: 300px;
+  }
+
+  .banner-content {
+    min-height: 300px;
+  }
+}
+
+/* 769px~1193px: 오버레이 유지, 그라데이션 50% / 좌우 버튼과 겹치지 않도록 패딩 */
+@media (min-width: 769px) {
+  .banner-content {
+    background: transparent;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1193px) {
+  .banner-content {
+    padding-left: 88px;   /* left 버튼(20px + 48px) + 여유 20px */
+    padding-right: 88px;  /* right 버튼(48px + 20px) + 여유 20px */
+  }
+}
+
+/* --------------------------------------------
+   좌우 이동 버튼
+-------------------------------------------- */
+.banner-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.banner-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.banner-btn:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 2px;
+}
+
+.banner-prev {
+  left: 20px;
+}
+
+.banner-next {
+  right: 20px;
+}
+
+@media (max-width: 768px) {
+  .banner-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+  }
+
+  .banner-prev {
+    left: 12px;
+  }
+
+  .banner-next {
+    right: 12px;
+  }
+}
+
+/* --------------------------------------------
+   인디케이터
+-------------------------------------------- */
+.banner-indicators {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.banner-indicator {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: background 0.25s, transform 0.25s;
+}
+
+.banner-indicator:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.banner-indicator.is-active {
+  background: #fff;
+  transform: scale(1.2);
+}
+
+.banner-indicator:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .banner-indicators {
+    bottom: 12px;
+  }
+
+  .banner-indicator {
+    width: 8px;
+    height: 8px;
+  }
+}
+
+/* --------------------------------------------
+   배너 케이스 래퍼 + 제작 가이드 (배너 미리보기 아래 노출)
+-------------------------------------------- */
+.banner-case {
+  max-width: 100%;
+}
+
+.production-guide {
+  margin: 0;
+  padding: 32px 24px 40px;
+  background: rgba(255, 255, 255, 0.04);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.guide-heading {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.guide-intro {
+  margin: 0 0 24px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.guide-list {
+  margin: 0;
+  display: grid;
+  gap: 20px;
+}
+
+.guide-list dt {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.guide-list dd {
+  margin: 6px 0 0 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.guide-list ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.guide-list li {
+  margin-bottom: 6px;
+}
+
+.guide-list li:last-child {
+  margin-bottom: 0;
+}
+
+.guide-list code {
+  background: rgba(255, 255, 255, 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .production-guide {
+    padding: 24px 16px 32px;
+  }
+
+  .guide-heading {
+    font-size: 18px;
+  }
+}
+
+/* 가이드 푸터 */
+.guide-footer {
+  padding: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: #888;
+}
+
+.guide-footer code {
+  background: rgba(255,255,255,0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
