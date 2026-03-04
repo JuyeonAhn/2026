@@ -53,25 +53,59 @@
 
       <!-- 탭 패널: 제작 프로세스 -->
       <div class="guide-panel is-active" id="panel-process" role="tabpanel" aria-labelledby="tab-process">
-        <p class="guide-intro">위 미리보기는 첨부한 이미지·텍스트가 실제 노출되는 형태입니다. 아래 순서대로 이미지를 첨부하고 <strong>미리보기에 반영</strong> 버튼을 누르면 상단 배너에 적용됩니다.</p>
+        <p class="guide-intro">위 미리보기는 배너 제작 툴입니다. 파일 또는 링크를 넣고 <strong>적용하기</strong>를 누르면 미리보기에 바로 반영되며, 이미지를 바꿔가며 여러 번 테스트할 수 있습니다. 텍스트·컬러를 정한 뒤 마지막에 <strong>미리보기에 반영</strong>으로 확정하세요.</p>
 
         <div class="upload-process">
           <div class="process-step upload-step">
             <span class="process-num" aria-hidden="true">1</span>
             <div class="process-body">
               <h3 class="process-title">이미지 첨부</h3>
-              <p class="process-desc">배너로 사용할 이미지를 파일로 선택하거나, 이미지 주소(URL)를 입력하세요.</p>
+              <p class="process-desc">배너로 사용할 이미지를 파일로 선택하거나, 이미지 주소(URL)를 입력한 뒤 각각 <strong>적용하기</strong>를 눌러 미리보기에 반영하세요. 여러 번 바꿔가며 테스트할 수 있습니다.</p>
               <div class="upload-zone" id="upload-zone" role="button" tabindex="0" aria-label="이미지 선택 영역">
                 <input type="file" id="banner-file" accept="image/*" class="upload-input" aria-label="배너 이미지 파일 선택">
                 <span class="upload-placeholder" id="upload-placeholder">파일 선택 또는 여기에 이미지를 끌어다 놓으세요</span>
                 <span class="upload-filename" id="upload-filename" aria-live="polite"></span>
               </div>
+              <div class="upload-file-apply-row">
+                <button type="button" id="file-apply-btn" class="btn-url-apply" disabled>파일 적용하기</button>
+              </div>
               <div class="upload-url-row">
                 <label class="upload-label" for="banner-image-url">이미지 링크 (URL)</label>
                 <div class="upload-url-wrap">
                   <input type="url" id="banner-image-url" class="upload-text upload-url" placeholder="https://example.com/image.jpg" aria-label="이미지 URL">
-                  <button type="button" id="url-apply-btn" class="btn-url-apply">적용하기</button>
+                  <button type="button" id="url-apply-btn" class="btn-url-apply">링크 적용하기</button>
                 </div>
+              </div>
+
+              <div class="image-search-section">
+                <h4 class="image-search-title">이미지 검색</h4>
+                <p class="image-search-desc">검색어를 입력하면 무료 이미지를 찾아 배너에 적용할 수 있습니다. <strong>Pexels</strong>는 가입 즉시 API 키 발급(심사 없음)으로 바로 테스트할 수 있습니다.</p>
+
+                <div class="image-search-tabs">
+                  <button type="button" class="image-search-tab is-active" data-source="pexels">Pexels (즉시 테스트 가능)</button>
+                  <button type="button" class="image-search-tab" data-source="unsplash">Unsplash</button>
+                </div>
+
+                <div class="image-search-form image-search-form--pexels">
+                  <label class="upload-label" for="pexels-key">Pexels API Key</label>
+                  <input type="text" id="pexels-key" class="upload-text" placeholder="pexels.com/api 에서 발급 (가입 즉시 발급)" autocomplete="off">
+                  <div class="image-search-row">
+                    <input type="text" id="image-search-query" class="upload-text image-search-input" placeholder="예: forest, ocean, product" aria-label="이미지 검색어">
+                    <button type="button" id="image-search-btn" class="btn-url-apply">검색</button>
+                  </div>
+                </div>
+
+                <div class="image-search-form image-search-form--unsplash" hidden>
+                  <label class="upload-label" for="unsplash-key">Unsplash Access Key</label>
+                  <input type="text" id="unsplash-key" class="upload-text" placeholder="Unsplash Developers에서 발급 (심사 필요)" autocomplete="off">
+                  <div class="image-search-row">
+                    <input type="text" id="unsplash-search-query" class="upload-text image-search-input" placeholder="예: forest, ocean" aria-label="Unsplash 검색어">
+                    <button type="button" id="unsplash-search-btn" class="btn-url-apply">검색</button>
+                  </div>
+                </div>
+
+                <div id="image-search-status" class="image-search-status" aria-live="polite"></div>
+                <div id="image-search-results" class="image-search-results"></div>
               </div>
             </div>
           </div>
