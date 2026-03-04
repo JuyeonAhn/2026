@@ -258,4 +258,284 @@
     var max = parseInt(el.getAttribute('data-max'), 10) || 50;
     clampText(el, max);
   });
+
+  function rgbToHex(rgb) {
+    if (!rgb || rgb.length !== 3) return '#262a4d';
+    var r = Math.max(0, Math.min(255, rgb[0]));
+    var g = Math.max(0, Math.min(255, rgb[1]));
+    var b = Math.max(0, Math.min(255, rgb[2]));
+    return '#' + [r, g, b].map(function (x) {
+      var h = x.toString(16);
+      return h.length === 1 ? '0' + h : h;
+    }).join('');
+  }
+
+  function hexToRgb(hex) {
+    var m = (hex || '').replace(/^#/, '').match(/^([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+    if (!m) return null;
+    return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
+  }
+
+  /* 사용자 이미지 첨부 → 미리보기 반영 (첫 번째 슬라이드에 적용) */
+  (function initUploadApply() {
+    var fileInput = document.getElementById('banner-file');
+    var urlInput = document.getElementById('banner-image-url');
+    var uploadZone = document.getElementById('upload-zone');
+    var placeholder = document.getElementById('upload-placeholder');
+    var filenameEl = document.getElementById('upload-filename');
+    var titleInput = document.getElementById('banner-title-input');
+    var subInput = document.getElementById('banner-sub-input');
+    var titleMsg = document.getElementById('title-msg');
+    var subMsg = document.getElementById('sub-msg');
+    var applyBtn = document.getElementById('apply-preview-btn');
+    var colorPicker = document.getElementById('banner-color-picker');
+    var colorDefaultSwatch = document.getElementById('color-default-swatch');
+    var colorResetBtn = document.getElementById('color-reset-btn');
+    var defaultExtractedRgb = null;
+    if (!fileInput || !applyBtn || !track || slides.length === 0) return;
+
+    function updateApplyButton() {
+      var hasFile = fileInput.files && fileInput.files.length > 0;
+      var hasUrl = urlInput && (urlInput.value || '').trim().length > 0;
+      applyBtn.disabled = !hasFile && !hasUrl;
+    }
+
+    function checkTitleSub() {
+      var titleLen = (titleInput && titleInput.value) ? titleInput.value.length : 0;
+      var subLen = (subInput && subInput.value) ? subInput.value.length : 0;
+      if (titleMsg) {
+        titleMsg.textContent = titleLen > 30 ? '30자 이내로 작성해 주세요.' : '';
+        if (titleInput) titleInput.classList.toggle('is-over', titleLen > 30);
+      }
+      if (subMsg) {
+        subMsg.textContent = subLen > 50 ? '50자 이내로 작성해 주세요.' : '';
+        if (subInput) subInput.classList.toggle('is-over', subLen > 50);
+      }
+    }
+    if (titleInput) titleInput.addEventListener('input', checkTitleSub);
+    if (subInput) subInput.addEventListener('input', checkTitleSub);
+
+    uploadZone.addEventListener('click', function () {
+      fileInput.click();
+    });
+    uploadZone.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+    uploadZone.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      uploadZone.classList.add('is-dragover');
+    });
+    uploadZone.addEventListener('dragleave', function () {
+      uploadZone.classList.remove('is-dragover');
+    });
+    uploadZone.addEventListener('drop', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      uploadZone.classList.remove('is-dragover');
+      var files = e.dataTransfer.files;
+      if (files && files.length > 0 && files[0].type.indexOf('image/') === 0) {
+        fileInput.files = files;
+        if (filenameEl) filenameEl.textContent = files[0].name;
+        if (placeholder) placeholder.style.display = 'none';
+        updateApplyButton();
+      }
+    });
+
+    fileInput.addEventListener('change', function () {
+      if (fileInput.files && fileInput.files[0]) {
+        if (filenameEl) filenameEl.textContent = fileInput.files[0].name;
+        if (placeholder) placeholder.style.display = 'none';
+      } else {
+        if (filenameEl) filenameEl.textContent = '';
+        if (placeholder) placeholder.style.display = '';
+      }
+      updateApplyButton();
+    });
+    if (urlInput) urlInput.addEventListener('input', updateApplyButton);
+
+    /* 이미지 링크 적용하기 버튼: URL만으로 미리보기에 즉시 반영 */
+    var urlApplyBtn = document.getElementById('url-apply-btn');
+    if (urlApplyBtn && urlInput && track && slides.length > 0) {
+      urlApplyBtn.addEventListener('click', function () {
+        var imageUrl = (urlInput.value || '').trim();
+        if (!imageUrl) return;
+        var firstSlide = slides[0];
+        if (!firstSlide) return;
+        var img = firstSlide.querySelector('.banner-image');
+        if (!img) return;
+
+        img.crossOrigin = 'anonymous';
+        img.src = imageUrl;
+        img.style.display = '';
+
+        if (firstClone) {
+          var cloneImg = firstClone.querySelector('.banner-image');
+          if (cloneImg) {
+            cloneImg.crossOrigin = 'anonymous';
+            cloneImg.src = imageUrl;
+            cloneImg.style.display = '';
+          }
+        }
+
+        extractDominantColor(img, function (rgb) {
+          applySlideBg(firstSlide, rgb);
+          if (firstClone) firstClone.style.setProperty('--slide-bg', rgb[0] + ',' + rgb[1] + ',' + rgb[2]);
+          defaultExtractedRgb = rgb;
+          var hex = rgbToHex(rgb);
+          if (colorDefaultSwatch) {
+            colorDefaultSwatch.style.backgroundColor = hex;
+            colorDefaultSwatch.textContent = '';
+            colorDefaultSwatch.classList.add('has-color');
+          }
+          if (colorPicker) colorPicker.value = hex;
+          if (colorResetBtn) colorResetBtn.disabled = false;
+        });
+      });
+    }
+
+    applyBtn.addEventListener('click', function () {
+      var imageUrl = (urlInput && urlInput.value) ? urlInput.value.trim() : '';
+      var hasFile = fileInput.files && fileInput.files.length > 0;
+      if (!hasFile && !imageUrl) return;
+      var title = (titleInput && titleInput.value) ? titleInput.value.trim() : '';
+      var sub = (subInput && subInput.value) ? subInput.value.trim() : '';
+      if (title.length > 30) title = title.slice(0, 30);
+      if (sub.length > 50) sub = sub.slice(0, 50);
+
+      var imageSource;
+      if (imageUrl) {
+        imageSource = imageUrl;
+      } else {
+        var file = fileInput.files[0];
+        imageSource = URL.createObjectURL(file);
+      }
+      var firstSlide = slides[0];
+      if (!firstSlide) return;
+      var img = firstSlide.querySelector('.banner-image');
+      var titleEl = firstSlide.querySelector('.banner-title');
+      var subEl = firstSlide.querySelector('.banner-sub');
+      if (!img) return;
+
+      if (imageUrl) img.crossOrigin = 'anonymous';
+      img.src = imageSource;
+      img.style.display = '';
+      if (titleEl) {
+        titleEl.textContent = title || titleEl.textContent;
+        clampText(titleEl, 30);
+      }
+      if (subEl) {
+        subEl.textContent = sub || subEl.textContent;
+        clampText(subEl, 50);
+      }
+
+      if (firstClone) {
+        var cloneImg = firstClone.querySelector('.banner-image');
+        var cloneTitle = firstClone.querySelector('.banner-title');
+        var cloneSub = firstClone.querySelector('.banner-sub');
+        if (cloneImg) {
+          if (imageUrl) cloneImg.crossOrigin = 'anonymous';
+          cloneImg.src = imageSource;
+          cloneImg.style.display = '';
+        }
+        if (cloneTitle) {
+          cloneTitle.textContent = titleEl ? titleEl.textContent : (title || '');
+          clampText(cloneTitle, 30);
+        }
+        if (cloneSub) {
+          cloneSub.textContent = subEl ? subEl.textContent : (sub || '');
+          clampText(cloneSub, 50);
+        }
+      }
+
+      extractDominantColor(img, function (rgb) {
+        applySlideBg(firstSlide, rgb);
+        if (firstClone) applySlideBg(firstClone, rgb);
+        defaultExtractedRgb = rgb;
+        var hex = rgbToHex(rgb);
+        if (colorDefaultSwatch) {
+          colorDefaultSwatch.style.backgroundColor = hex;
+          colorDefaultSwatch.textContent = '';
+          colorDefaultSwatch.classList.add('has-color');
+        }
+        if (colorPicker) colorPicker.value = hex;
+        if (colorResetBtn) colorResetBtn.disabled = false;
+      });
+
+      applyBtn.textContent = '반영됨';
+      applyBtn.disabled = true;
+      setTimeout(function () {
+        applyBtn.textContent = '미리보기에 반영';
+        updateApplyButton();
+      }, 2000);
+    });
+
+    /* 컬러 팔레트: 조정 시 배너에 즉시 반영, 되돌리기 */
+    if (colorPicker && slides.length > 0) {
+      colorPicker.addEventListener('input', function () {
+        var hex = colorPicker.value;
+        var rgb = hexToRgb(hex);
+        if (rgb) {
+          applySlideBg(slides[0], rgb);
+          if (firstClone) firstClone.style.setProperty('--slide-bg', rgb[0] + ',' + rgb[1] + ',' + rgb[2]);
+        }
+      });
+    }
+    if (colorResetBtn && slides.length > 0) {
+      colorResetBtn.addEventListener('click', function () {
+        if (!defaultExtractedRgb) return;
+        applySlideBg(slides[0], defaultExtractedRgb);
+        if (firstClone) firstClone.style.setProperty('--slide-bg', defaultExtractedRgb[0] + ',' + defaultExtractedRgb[1] + ',' + defaultExtractedRgb[2]);
+        if (colorPicker) colorPicker.value = rgbToHex(defaultExtractedRgb);
+      });
+    }
+
+    /* 초기 주조색이 있으면 기본 주조색·피커·되돌리기 버튼 활성화 */
+    (function initColorFromSlide() {
+      var firstSlide = slides[0];
+      if (!firstSlide || !colorPicker) return;
+      var bg = firstSlide.getAttribute('data-slide-bg') || firstSlide.style.getPropertyValue('--slide-bg') || (window.getComputedStyle && getComputedStyle(firstSlide).getPropertyValue('--slide-bg').trim());
+      if (bg && /^\d+,\s*\d+,\s*\d+$/.test(bg.trim())) {
+        var parts = bg.split(',').map(function (p) { return parseInt(p.trim(), 10); });
+        if (parts.length === 3) {
+          var hex = rgbToHex(parts);
+          defaultExtractedRgb = parts;
+          colorPicker.value = hex;
+          if (colorDefaultSwatch) {
+            colorDefaultSwatch.style.backgroundColor = hex;
+            colorDefaultSwatch.textContent = '';
+            colorDefaultSwatch.classList.add('has-color');
+          }
+          if (colorResetBtn) colorResetBtn.disabled = false;
+        }
+      }
+    })();
+  })();
+
+  /* 탭 전환: 제작 프로세스 / 가이드 */
+  (function initGuideTabs() {
+    var tabProcess = document.getElementById('tab-process');
+    var tabGuide = document.getElementById('tab-guide');
+    var panelProcess = document.getElementById('panel-process');
+    var panelGuide = document.getElementById('panel-guide');
+    if (!tabProcess || !tabGuide || !panelProcess || !panelGuide) return;
+
+    function switchTo(id) {
+      var isProcess = id === 'panel-process';
+      tabProcess.classList.toggle('is-active', isProcess);
+      tabGuide.classList.toggle('is-active', !isProcess);
+      tabProcess.setAttribute('aria-selected', isProcess);
+      tabGuide.setAttribute('aria-selected', !isProcess);
+      panelProcess.classList.toggle('is-active', isProcess);
+      panelGuide.classList.toggle('is-active', !isProcess);
+      panelProcess.hidden = !isProcess;
+      panelGuide.hidden = isProcess;
+    }
+
+    tabProcess.addEventListener('click', function () { switchTo('panel-process'); });
+    tabGuide.addEventListener('click', function () { switchTo('panel-guide'); });
+  })();
 })();

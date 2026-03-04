@@ -43,54 +43,136 @@
     </div>
 
     <section class="production-guide" aria-label="배너 제작 가이드">
+      <div class="guide-inner">
       <h2 class="guide-heading">배너 제작 가이드</h2>
-      <p class="guide-intro">위 미리보기는 업로드한 이미지·텍스트가 실제 노출되는 형태입니다. 아래 규칙을 준수해 제작해 주세요.</p>
 
-      <dl class="guide-list">
-        <dt>파일명 규칙 (레이블)</dt>
-        <dd>
-          <ul>
-            <li><strong>1장만 사용:</strong> <code>banner.jpg</code> (또는 <code>banner_1.jpg</code>)</li>
-            <li><strong>여러 장 사용:</strong> <code>banner_1.jpg</code>, <code>banner_2.jpg</code>, <code>banner_3.jpg</code> … 순서대로 번호 부여</li>
-            <li>이미지와 함께 사용할 타이틀·서브 카피는 이 페이지 상단의 <code>#banner-config</code> 설정에서 수정할 수 있습니다.</li>
-          </ul>
-        </dd>
+      <div class="guide-tabs" role="tablist" aria-label="제작 프로세스 / 가이드">
+        <button type="button" class="guide-tab is-active" role="tab" aria-selected="true" aria-controls="panel-process" id="tab-process">제작 프로세스</button>
+        <button type="button" class="guide-tab" role="tab" aria-selected="false" aria-controls="panel-guide" id="tab-guide">가이드</button>
+      </div>
 
-        <dt>브레이크포인트 및 크기</dt>
-        <dd>
-          <ul>
-            <li><strong>1194px 이상:</strong> 배너 높이 300px 고정. 타이틀 32px, 서브 24px. 텍스트 좌측 정렬, 좌측 패딩 120px.</li>
-            <li><strong>769px ~ 1193px:</strong> 높이 260px. 타이틀 22px, 서브 15px. 좌측 정렬. 좌우 이동 버튼과 겹치지 않도록 패딩 88px.</li>
-            <li><strong>768px 이하:</strong> 이미지 영역(상단)과 텍스트 영역(하단) 분리. 타이틀 20px, 서브 14px. 텍스트 가운데 정렬.</li>
-            <li><strong>480px 이하:</strong> 이미지 높이 200px. 타이틀 18px, 서브 13px.</li>
-          </ul>
-        </dd>
+      <!-- 탭 패널: 제작 프로세스 -->
+      <div class="guide-panel is-active" id="panel-process" role="tabpanel" aria-labelledby="tab-process">
+        <p class="guide-intro">위 미리보기는 첨부한 이미지·텍스트가 실제 노출되는 형태입니다. 아래 순서대로 이미지를 첨부하고 <strong>미리보기에 반영</strong> 버튼을 누르면 상단 배너에 적용됩니다.</p>
 
-        <dt>텍스트 제한</dt>
-        <dd>
-          <ul>
-            <li><strong>타이틀:</strong> 30자 제한 (초과 시 말줄임 … 처리)</li>
-            <li><strong>서브 카피:</strong> 50자 제한 (초과 시 말줄임 … 처리)</li>
-          </ul>
-        </dd>
+        <div class="upload-process">
+          <div class="process-step upload-step">
+            <span class="process-num" aria-hidden="true">1</span>
+            <div class="process-body">
+              <h3 class="process-title">이미지 첨부</h3>
+              <p class="process-desc">배너로 사용할 이미지를 파일로 선택하거나, 이미지 주소(URL)를 입력하세요.</p>
+              <div class="upload-zone" id="upload-zone" role="button" tabindex="0" aria-label="이미지 선택 영역">
+                <input type="file" id="banner-file" accept="image/*" class="upload-input" aria-label="배너 이미지 파일 선택">
+                <span class="upload-placeholder" id="upload-placeholder">파일 선택 또는 여기에 이미지를 끌어다 놓으세요</span>
+                <span class="upload-filename" id="upload-filename" aria-live="polite"></span>
+              </div>
+              <div class="upload-url-row">
+                <label class="upload-label" for="banner-image-url">이미지 링크 (URL)</label>
+                <div class="upload-url-wrap">
+                  <input type="url" id="banner-image-url" class="upload-text upload-url" placeholder="https://example.com/image.jpg" aria-label="이미지 URL">
+                  <button type="button" id="url-apply-btn" class="btn-url-apply">적용하기</button>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        <dt>배경·딤드 그라데이션</dt>
-        <dd>
-          <ul>
-            <li>각 슬라이드 이미지에서 <strong>주조색을 추출</strong>해 배경색으로 사용합니다. 동일 이미지면 항상 같은 색이 나오도록 안정화되어 있습니다.</li>
-            <li><strong>1194px 이상 / 769~1193px:</strong> 딤드 그라데이션은 화면 너비의 <strong>좌측 50%</strong>만 적용. 좌(높은 오퍼시티) → 중간(투명)으로 자연스럽게 이어짐.</li>
-            <li><strong>768px 이하:</strong> 이미지 하단 1/3만 딤드 그라데이션 적용. 상단 2/3는 이미지가 그대로 노출되며, 텍스트 영역과 색으로 자연스럽게 연결.</li>
-          </ul>
-        </dd>
+          <div class="process-step process-step--color">
+            <span class="process-num" aria-hidden="true">2</span>
+            <div class="process-body">
+              <h3 class="process-title">컬러 팔레트</h3>
+              <p class="process-desc">이미지 반영 시 추출된 기본 주조색을 확인하고, 필요 시 변경한 뒤 기본과 비교할 수 있습니다.</p>
+              <div class="color-palette">
+                <div class="color-palette-row">
+                  <span class="color-palette-label">기본 주조색 (이미지에서 추출)</span>
+                  <span class="color-swatch color-swatch--default" id="color-default-swatch" title="기본 주조색">이미지 반영 후 표시</span>
+                </div>
+                <div class="color-palette-row color-palette-row--edit">
+                  <span class="color-palette-label">주조색 변경하기</span>
+                  <div class="color-palette-edit">
+                    <input type="color" id="banner-color-picker" class="color-picker" value="#262a4d" aria-label="주조색 선택">
+                    <button type="button" id="color-reset-btn" class="btn-reset" disabled>추출된 기본 주조색 사용하기</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        <dt>슬라이드 동작</dt>
-        <dd>
-          <ul>
-            <li><strong>무한 루핑:</strong> 마지막 장에서 다음 버튼 → 첫 장으로, 첫 장에서 이전 버튼 → 마지막 장으로 끊김 없이 이어짐.</li>
-            <li>좌우 이동 버튼과 하단 인디케이터로 이동 가능. 인디케이터는 현재 보고 있는 실제 슬라이드 번호와 동기화됩니다.</li>
-          </ul>
-        </dd>
-      </dl>
+          <div class="process-step">
+            <span class="process-num" aria-hidden="true">3</span>
+            <div class="process-body">
+              <h3 class="process-title">타이틀·서브 입력 (필수)</h3>
+              <p class="process-desc">미리보기에 함께 표시할 텍스트를 입력하세요.</p>
+              <div class="upload-fields">
+                <label class="upload-label">
+                  <span>타이틀 <em>(30자 이내)</em></span>
+                  <input type="text" id="banner-title-input" class="upload-text" placeholder="예: 환상의 밤, 빛나는 숲속 이야기" data-max="30">
+                  <span class="upload-msg upload-msg--error" id="title-msg" aria-live="polite"></span>
+                </label>
+                <label class="upload-label">
+                  <span>서브 카피 <em>(50자 이내)</em></span>
+                  <input type="text" id="banner-sub-input" class="upload-text" placeholder="예: 몽환적인 발광 식물과 신비로운 생명들이 당신을 기다립니다." data-max="50">
+                  <span class="upload-msg upload-msg--error" id="sub-msg" aria-live="polite"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="process-step">
+            <span class="process-num" aria-hidden="true">4</span>
+            <div class="process-body">
+              <h3 class="process-title">미리보기에 반영</h3>
+              <p class="process-desc">첨부한 이미지(와 입력한 텍스트·주조색)를 상단 배너의 첫 번째 슬라이드에 적용합니다.</p>
+              <button type="button" id="apply-preview-btn" class="btn-apply" disabled>미리보기에 반영</button>
+            </div>
+          </div>
+
+          <p class="process-hint">반영 후 상단 배너에서 노출 형태를 확인하세요. 창 크기를 조절해 반응형을 확인할 수 있습니다.</p>
+        </div>
+      </div>
+
+      <!-- 탭 패널: 가이드 -->
+      <div class="guide-panel" id="panel-guide" role="tabpanel" aria-labelledby="tab-guide" hidden>
+        <h3 class="guide-subheading">적용 규칙 (참고)</h3>
+        <p class="guide-note">아래 규칙은 위 미리보기에 자동 적용됩니다. 제작 시 준수할 사항입니다.</p>
+
+        <dl class="guide-list">
+          <dt>브레이크포인트 및 크기</dt>
+          <dd>
+            <ul>
+              <li><strong>1194px 이상:</strong> 배너 높이 300px 고정. 타이틀 32px, 서브 24px. 텍스트 좌측 정렬, 좌측 패딩 120px.</li>
+              <li><strong>769px ~ 1193px:</strong> 높이 260px. 타이틀 22px, 서브 15px. 좌측 정렬. 좌우 이동 버튼과 겹치지 않도록 패딩 88px.</li>
+              <li><strong>768px 이하:</strong> 이미지 영역(상단)과 텍스트 영역(하단) 분리. 타이틀 20px, 서브 14px. 텍스트 가운데 정렬.</li>
+              <li><strong>480px 이하:</strong> 이미지 높이 200px. 타이틀 18px, 서브 13px.</li>
+            </ul>
+          </dd>
+
+          <dt>텍스트 제한</dt>
+          <dd>
+            <ul>
+              <li><strong>타이틀:</strong> 30자 제한 (초과 시 말줄임 … 처리)</li>
+              <li><strong>서브 카피:</strong> 50자 제한 (초과 시 말줄임 … 처리)</li>
+            </ul>
+          </dd>
+
+          <dt>배경·딤드 그라데이션</dt>
+          <dd>
+            <ul>
+              <li>각 슬라이드 이미지에서 <strong>주조색을 추출</strong>해 배경색으로 사용. 동일 이미지면 항상 같은 색이 나오도록 안정화.</li>
+              <li><strong>1194px 이상 / 769~1193px:</strong> 딤드 그라데이션은 화면 너비의 <strong>좌측 50%</strong>만 적용. 좌(높은 오퍼시티) → 중간(투명)으로 이어짐.</li>
+              <li><strong>768px 이하:</strong> 이미지 하단 1/3만 딤드 적용. 상단 2/3는 이미지 그대로 노출, 텍스트 영역과 색으로 자연스럽게 연결.</li>
+            </ul>
+          </dd>
+
+          <dt>슬라이드 동작</dt>
+          <dd>
+            <ul>
+              <li><strong>무한 루핑:</strong> 마지막 장 → 다음 버튼 시 첫 장으로, 첫 장 → 이전 버튼 시 마지막 장으로 끊김 없이 이어짐.</li>
+              <li>좌우 이동 버튼과 하단 인디케이터로 이동 가능. 인디케이터는 현재 슬라이드 번호와 동기화됩니다.</li>
+            </ul>
+          </dd>
+        </dl>
+      </div>
+      </div>
     </section>
   </div>
 
