@@ -81,61 +81,86 @@
   var current = 1; /* 처음에는 1번(첫 번째 실제 슬라이드) 표시 */
 
   /**
-   * 이미지에서 주조색 추출 (양자화 후 최빈 색 → 동일 이미지면 항상 같은 결과)
-   * 추출값은 data-slide-bg에 저장해 두면 다음 로드 시 재사용(롤링배너 가이드 고정)
+   * 캔버스 픽셀에서 주조색 계산. 하단 영역만 사용(텍스트 오버레이와 맞닿는 부분 → 슬라이드별로 다른 색 나오기 유리).
    */
+  function sampleToRgb(canvas, fullW, fullH, useBottomThird, done) {
+    try {
+      var ctx = canvas.getContext('2d');
+      var x0 = 0, y0 = 0, w = fullW, h = fullH;
+      if (useBottomThird && fullH >= 3) {
+        h = Math.max(1, Math.floor(fullH / 3));
+        y0 = fullH - h;
+      }
+      var data = ctx.getImageData(x0, y0, w, h).data;
+      var shift = 4;
+      var buckets = {};
+      for (var i = 0; i < data.length; i += 4) {
+        var r = data[i] >> shift;
+        var g = data[i + 1] >> shift;
+        var b = data[i + 2] >> shift;
+        var a = data[i + 3];
+        if (a < 128) continue;
+        var key = r + ',' + g + ',' + b;
+        if (!buckets[key]) buckets[key] = { count: 0, r: 0, g: 0, b: 0 };
+        buckets[key].count += 1;
+        buckets[key].r += data[i];
+        buckets[key].g += data[i + 1];
+        buckets[key].b += data[i + 2];
+      }
+      var best = null;
+      for (var k in buckets) {
+        if (!best || buckets[k].count > best.count) best = buckets[k];
+      }
+      if (best && best.count > 0) {
+        var r = Math.round(best.r / best.count);
+        var g = Math.round(best.g / best.count);
+        var b = Math.round(best.b / best.count);
+        var dim = 0.78;
+        r = Math.min(255, Math.round(r * dim));
+        g = Math.min(255, Math.round(g * dim));
+        b = Math.min(255, Math.round(b * dim));
+        if (done) done([r, g, b]);
+      } else if (done) done(null);
+    } catch (e) {
+      if (done) done(null);
+    }
+  }
+
   function extractDominantColor(img, done) {
     if (!img || !img.src) {
       if (done) done(null);
       return;
     }
+    var w = 64;
+    var h = 48;
+    var src = typeof img.src === 'string' ? img.src : '';
+    var sameOrigin = src.indexOf('blob:') === 0 || src.indexOf('data:') === 0;
+    if (!sameOrigin) {
+      try { sameOrigin = new URL(src, window.location.href).origin === window.location.origin; } catch (e) { sameOrigin = true; }
+    }
+    var useDirect = img.complete && img.naturalWidth > 0 && sameOrigin;
+
+    function drawAndSample(canvasEl, imgOrProxy) {
+      var ctx = canvasEl.getContext('2d');
+      ctx.drawImage(imgOrProxy, 0, 0, w, h);
+      sampleToRgb(canvasEl, w, h, true, done);
+    }
+
+    if (useDirect) {
+      var canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      drawAndSample(canvas, img);
+      return;
+    }
+
     var proxy = new Image();
-    proxy.crossOrigin = 'anonymous';
+    proxy.crossOrigin = sameOrigin ? '' : 'anonymous';
     proxy.onload = function () {
-      try {
-        var w = 64;
-        var h = 48;
-        var canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        var ctx = canvas.getContext('2d');
-        ctx.drawImage(proxy, 0, 0, w, h);
-        var data = ctx.getImageData(0, 0, w, h).data;
-        /* 4비트 양자화 (16단계) → 같은 이미지면 동일한 버킷 카운트 */
-        var shift = 4;
-        var buckets = {};
-        for (var i = 0; i < data.length; i += 4) {
-          var r = data[i] >> shift;
-          var g = data[i + 1] >> shift;
-          var b = data[i + 2] >> shift;
-          var a = data[i + 3];
-          if (a < 128) continue;
-          var key = r + ',' + g + ',' + b;
-          if (!buckets[key]) buckets[key] = { count: 0, r: 0, g: 0, b: 0 };
-          buckets[key].count += 1;
-          buckets[key].r += data[i];
-          buckets[key].g += data[i + 1];
-          buckets[key].b += data[i + 2];
-        }
-        var best = null;
-        for (var k in buckets) {
-          if (!best || buckets[k].count > best.count) best = buckets[k];
-        }
-        if (best && best.count > 0) {
-          var r = Math.round(best.r / best.count);
-          var g = Math.round(best.g / best.count);
-          var b = Math.round(best.b / best.count);
-          var dim = 0.78;
-          r = Math.min(255, Math.round(r * dim));
-          g = Math.min(255, Math.round(g * dim));
-          b = Math.min(255, Math.round(b * dim));
-          if (done) done([r, g, b]);
-        } else if (done) {
-          done(null);
-        }
-      } catch (e) {
-        if (done) done(null);
-      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      drawAndSample(canvas, proxy);
     };
     proxy.onerror = function () {
       if (done) done(null);
@@ -152,20 +177,29 @@
     if (slide === slides[totalReal - 1] && lastClone) lastClone.style.setProperty('--slide-bg', value);
   }
 
-  /* data-slide-bg가 있으면 그대로 사용(가이드 고정), 없으면 주조색 추출 후 적용·저장 */
+  var defaultRgb = [38, 42, 77];
+  /* 슬라이드별 주조색: 해당 슬라이드 이미지만 추출 후 해당 슬라이드에만 적용. 실패 시 기본값. 완료 시 옵션 콜백 호출 */
+  function extractAndApplySlideBg(slide, onDone) {
+    var img = slide.querySelector('.banner-image');
+    if (!img || !img.src) {
+      if (onDone) onDone();
+      return;
+    }
+    extractDominantColor(img, function (rgb) {
+      var toApply = (rgb && rgb.length === 3) ? rgb : defaultRgb;
+      applySlideBg(slide, toApply);
+      if (onDone) onDone();
+    });
+  }
+
   slides.forEach(function (slide) {
     var cached = slide.getAttribute('data-slide-bg');
     if (cached && /^\d+,\d+,\d+$/.test(cached)) {
       slide.style.setProperty('--slide-bg', cached);
       if (slide === slides[0] && firstClone) firstClone.style.setProperty('--slide-bg', cached);
       if (slide === slides[totalReal - 1] && lastClone) lastClone.style.setProperty('--slide-bg', cached);
-      return;
     }
-    var img = slide.querySelector('.banner-image');
-    if (!img) return;
-    extractDominantColor(img, function (rgb) {
-      applySlideBg(slide, rgb);
-    });
+    /* 캐시 없으면 초기 추출 안 함 → 이미지 로드 후에만 추출(직접 그리기로 2·3번 슬라이드 주조색 확실히 반영) */
   });
 
   /* 세로형 이미지 감지: height > width 이면 우측 60% 배치용 클래스 적용 */
@@ -178,11 +212,19 @@
     if (slide === slides[0] && firstClone) firstClone.classList.toggle('banner-slide--portrait', !!isPortrait);
   }
 
+  /* 주조색은 이미지 로드 후에만 추출. 추출 완료 시 해당 슬라이드가 현재면 팔레트 동기화 */
   slides.forEach(function (slide) {
     var img = slide.querySelector('.banner-image');
     if (!img) return;
-    img.addEventListener('load', function () { checkPortrait(img); });
-    if (img.complete) checkPortrait(img);
+    function onReady() {
+      checkPortrait(img);
+      var slideIndex = slides.indexOf(slide);
+      extractAndApplySlideBg(slide, function () {
+        document.dispatchEvent(new CustomEvent('banner-slide-color-applied', { detail: { index: slideIndex } }));
+      });
+    }
+    img.addEventListener('load', onReady);
+    if (img.complete) onReady();
   });
 
   function getLogicalIndex() {
@@ -205,6 +247,7 @@
       ind.classList.toggle('is-active', i === logical);
       ind.setAttribute('aria-selected', i === logical);
     });
+    document.dispatchEvent(new CustomEvent('banner-slide-change', { detail: { index: logical } }));
   }
 
   function onTransitionEnd(e) {
@@ -304,17 +347,115 @@
     var subInput = document.getElementById('banner-sub-input');
     var titleMsg = document.getElementById('title-msg');
     var subMsg = document.getElementById('sub-msg');
-    var applyBtn = document.getElementById('apply-preview-btn');
-    var colorPicker = document.getElementById('banner-color-picker');
+    var textApplyTitleBtn = document.getElementById('text-apply-title-btn');
+    var textApplySubBtn = document.getElementById('text-apply-sub-btn');
+    var colorHex = document.getElementById('banner-color-hex');
+    var colorSliderR = document.getElementById('color-slider-r');
+    var colorSliderG = document.getElementById('color-slider-g');
+    var colorSliderB = document.getElementById('color-slider-b');
+    var colorInputR = document.getElementById('color-input-r');
+    var colorInputG = document.getElementById('color-input-g');
+    var colorInputB = document.getElementById('color-input-b');
     var colorDefaultSwatch = document.getElementById('color-default-swatch');
     var colorResetBtn = document.getElementById('color-reset-btn');
     var defaultExtractedRgb = null;
-    if (!fileInput || !applyBtn || !track || slides.length === 0) return;
+    var currentPaletteSlideIndex = 0;
+    var DEFAULT_SLIDE_BG = [38, 42, 77];
+    if (!fileInput || !track || slides.length === 0) return;
+
+    function setColorPickerUi(rgb) {
+      if (!rgb || rgb.length !== 3) return;
+      var r = Math.max(0, Math.min(255, rgb[0]));
+      var g = Math.max(0, Math.min(255, rgb[1]));
+      var b = Math.max(0, Math.min(255, rgb[2]));
+      var hex = rgbToHex([r, g, b]);
+      if (colorHex) colorHex.value = hex;
+      if (colorSliderR) colorSliderR.value = r;
+      if (colorSliderG) colorSliderG.value = g;
+      if (colorSliderB) colorSliderB.value = b;
+      if (colorInputR) colorInputR.value = r;
+      if (colorInputG) colorInputG.value = g;
+      if (colorInputB) colorInputB.value = b;
+    }
+
+    function getColorPickerRgb() {
+      var r = parseInt(colorInputR && colorInputR.value, 10);
+      var g = parseInt(colorInputG && colorInputG.value, 10);
+      var b = parseInt(colorInputB && colorInputB.value, 10);
+      if (!isNaN(r) && !isNaN(g) && !isNaN(b)) return [Math.max(0, Math.min(255, r)), Math.max(0, Math.min(255, g)), Math.max(0, Math.min(255, b))];
+      var rgb = hexToRgb(colorHex && colorHex.value);
+      return rgb || null;
+    }
+
+    function applyColorFromPicker() {
+      var rgb = getColorPickerRgb();
+      if (!rgb || !slides[currentPaletteSlideIndex]) return;
+      applySlideBg(slides[currentPaletteSlideIndex], rgb);
+      if (currentPaletteSlideIndex === 0 && firstClone) firstClone.style.setProperty('--slide-bg', rgb[0] + ',' + rgb[1] + ',' + rgb[2]);
+      if (currentPaletteSlideIndex === totalReal - 1 && lastClone) lastClone.style.setProperty('--slide-bg', rgb[0] + ',' + rgb[1] + ',' + rgb[2]);
+    }
+
+    /** 지정 슬라이드에 주조색 적용 + 팔레트 UI 갱신 (첫 슬라이드 전용 호출 시 0) */
+    function updateFirstSlideColorAndPalette(rgb) {
+      var toApply = rgb && rgb.length === 3 ? rgb : DEFAULT_SLIDE_BG;
+      var firstSlide = slides[0];
+      applySlideBg(firstSlide, toApply);
+      if (firstClone) firstClone.style.setProperty('--slide-bg', toApply[0] + ',' + toApply[1] + ',' + toApply[2]);
+      defaultExtractedRgb = toApply;
+      if (colorDefaultSwatch) {
+        colorDefaultSwatch.style.backgroundColor = rgbToHex(toApply);
+        colorDefaultSwatch.textContent = '';
+        colorDefaultSwatch.classList.add('has-color');
+      }
+      setColorPickerUi(toApply);
+      if (colorResetBtn) colorResetBtn.disabled = false;
+    }
+
+    /** 컬러 팔레트를 현재 보고 있는 슬라이드의 주조색으로 동기화 (2·3번 전환 시 해당 슬라이드 색 표시). 색 없으면 추출 후 다시 동기화 */
+    function syncPaletteToSlide(index) {
+      currentPaletteSlideIndex = index;
+      var slide = slides[index];
+      if (!slide) return;
+      var bg = slide.getAttribute('data-slide-bg') || slide.style.getPropertyValue('--slide-bg');
+      var parts = bg && bg.match(/^\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*$/);
+      if (parts) {
+        var rgb = [parseInt(parts[1], 10), parseInt(parts[2], 10), parseInt(parts[3], 10)];
+        defaultExtractedRgb = rgb;
+        var hex = rgbToHex(rgb);
+        if (colorDefaultSwatch) {
+          colorDefaultSwatch.style.backgroundColor = hex;
+          colorDefaultSwatch.textContent = '';
+          colorDefaultSwatch.classList.add('has-color');
+        }
+        setColorPickerUi(rgb);
+        if (colorResetBtn) colorResetBtn.disabled = false;
+      } else if (typeof extractAndApplySlideBg === 'function') {
+        extractAndApplySlideBg(slide, function () {
+          var b = slide.getAttribute('data-slide-bg');
+          var p = b && b.match(/^\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*$/);
+          if (p) {
+            var r = [parseInt(p[1], 10), parseInt(p[2], 10), parseInt(p[3], 10)];
+            defaultExtractedRgb = r;
+            if (colorDefaultSwatch) { colorDefaultSwatch.style.backgroundColor = rgbToHex(r); colorDefaultSwatch.textContent = ''; colorDefaultSwatch.classList.add('has-color'); }
+            setColorPickerUi(r);
+            if (colorResetBtn) colorResetBtn.disabled = false;
+          }
+        });
+      }
+    }
+
+    document.addEventListener('banner-slide-change', function (e) {
+      var idx = e.detail && e.detail.index;
+      if (typeof idx !== 'number' || idx < 0 || idx >= slides.length) return;
+      syncPaletteToSlide(idx);
+    });
+    document.addEventListener('banner-slide-color-applied', function (e) {
+      var idx = e.detail && e.detail.index;
+      if (typeof idx === 'number' && idx === currentPaletteSlideIndex) syncPaletteToSlide(idx);
+    });
 
     function updateApplyButton() {
       var hasFile = fileInput.files && fileInput.files.length > 0;
-      var hasUrl = urlInput && (urlInput.value || '').trim().length > 0;
-      applyBtn.disabled = !hasFile && !hasUrl;
       if (fileApplyBtn) fileApplyBtn.disabled = !hasFile;
     }
 
@@ -341,17 +482,7 @@
       });
       if (img.complete && typeof checkPortrait === 'function') checkPortrait(img);
       extractDominantColor(img, function (rgb) {
-        applySlideBg(firstSlide, rgb);
-        if (firstClone) firstClone.style.setProperty('--slide-bg', rgb[0] + ',' + rgb[1] + ',' + rgb[2]);
-        defaultExtractedRgb = rgb;
-        var hex = rgbToHex(rgb);
-        if (colorDefaultSwatch) {
-          colorDefaultSwatch.style.backgroundColor = hex;
-          colorDefaultSwatch.textContent = '';
-          colorDefaultSwatch.classList.add('has-color');
-        }
-        if (colorPicker) colorPicker.value = hex;
-        if (colorResetBtn) colorResetBtn.disabled = false;
+        updateFirstSlideColorAndPalette(rgb);
       });
     }
 
@@ -445,17 +576,7 @@
         if (img.complete && typeof checkPortrait === 'function') checkPortrait(img);
 
         extractDominantColor(img, function (rgb) {
-          applySlideBg(firstSlide, rgb);
-          if (firstClone) firstClone.style.setProperty('--slide-bg', rgb[0] + ',' + rgb[1] + ',' + rgb[2]);
-          defaultExtractedRgb = rgb;
-          var hex = rgbToHex(rgb);
-          if (colorDefaultSwatch) {
-            colorDefaultSwatch.style.backgroundColor = hex;
-            colorDefaultSwatch.textContent = '';
-            colorDefaultSwatch.classList.add('has-color');
-          }
-          if (colorPicker) colorPicker.value = hex;
-          if (colorResetBtn) colorResetBtn.disabled = false;
+          updateFirstSlideColorAndPalette(rgb);
         });
       });
     }
@@ -637,120 +758,122 @@
       });
     }
 
-    applyBtn.addEventListener('click', function () {
-      var imageUrl = (urlInput && urlInput.value) ? urlInput.value.trim() : '';
-      var hasFile = fileInput.files && fileInput.files.length > 0;
-      if (!hasFile && !imageUrl) return;
-      var title = (titleInput && titleInput.value) ? titleInput.value.trim() : '';
-      var sub = (subInput && subInput.value) ? subInput.value.trim() : '';
+    /* 텍스트 단계: 타이틀/서브 각각 적용하기 버튼으로 배너에 반영 */
+    function applyTitleToBanner() {
+      if (!titleInput || !slides.length) return;
+      var title = (titleInput.value || '').trim();
       if (title.length > 30) title = title.slice(0, 30);
-      if (sub.length > 50) sub = sub.slice(0, 50);
-
-      var imageSource;
-      if (imageUrl) {
-        imageSource = imageUrl;
-      } else {
-        var file = fileInput.files[0];
-        imageSource = URL.createObjectURL(file);
-      }
       var firstSlide = slides[0];
-      if (!firstSlide) return;
-      var img = firstSlide.querySelector('.banner-image');
       var titleEl = firstSlide.querySelector('.banner-title');
-      var subEl = firstSlide.querySelector('.banner-sub');
-      if (!img) return;
-
-      if (imageUrl) img.crossOrigin = 'anonymous';
-      img.src = imageSource;
-      img.style.display = '';
-      img.addEventListener('load', function onApplyLoad() {
-        img.removeEventListener('load', onApplyLoad);
-        if (typeof checkPortrait === 'function') checkPortrait(img);
-      });
-      if (img.complete && typeof checkPortrait === 'function') checkPortrait(img);
       if (titleEl) {
         titleEl.textContent = title || titleEl.textContent;
         clampText(titleEl, 30);
       }
-      if (subEl) {
-        subEl.textContent = sub || subEl.textContent;
-        clampText(subEl, 50);
-      }
-
       if (firstClone) {
-        var cloneImg = firstClone.querySelector('.banner-image');
         var cloneTitle = firstClone.querySelector('.banner-title');
-        var cloneSub = firstClone.querySelector('.banner-sub');
-        if (cloneImg) {
-          if (imageUrl) cloneImg.crossOrigin = 'anonymous';
-          cloneImg.src = imageSource;
-          cloneImg.style.display = '';
-        }
         if (cloneTitle) {
           cloneTitle.textContent = titleEl ? titleEl.textContent : (title || '');
           clampText(cloneTitle, 30);
         }
+      }
+    }
+    function applySubToBanner() {
+      if (!subInput || !slides.length) return;
+      var sub = (subInput.value || '').trim();
+      if (sub.length > 50) sub = sub.slice(0, 50);
+      var firstSlide = slides[0];
+      var subEl = firstSlide.querySelector('.banner-sub');
+      if (subEl) {
+        subEl.textContent = sub || subEl.textContent;
+        clampText(subEl, 50);
+      }
+      if (firstClone) {
+        var cloneSub = firstClone.querySelector('.banner-sub');
         if (cloneSub) {
           cloneSub.textContent = subEl ? subEl.textContent : (sub || '');
           clampText(cloneSub, 50);
         }
       }
+    }
+    if (textApplyTitleBtn && titleInput && slides.length > 0) {
+      textApplyTitleBtn.addEventListener('click', applyTitleToBanner);
+    }
+    if (textApplySubBtn && subInput && slides.length > 0) {
+      textApplySubBtn.addEventListener('click', applySubToBanner);
+    }
 
-      extractDominantColor(img, function (rgb) {
-        applySlideBg(firstSlide, rgb);
-        if (firstClone) applySlideBg(firstClone, rgb);
-        defaultExtractedRgb = rgb;
-        var hex = rgbToHex(rgb);
-        if (colorDefaultSwatch) {
-          colorDefaultSwatch.style.backgroundColor = hex;
-          colorDefaultSwatch.textContent = '';
-          colorDefaultSwatch.classList.add('has-color');
-        }
-        if (colorPicker) colorPicker.value = hex;
-        if (colorResetBtn) colorResetBtn.disabled = false;
+    /* 컬러 팔레트(첨부형): Hex·R·G·B 변경 시 배너에 즉시 반영 */
+    function bindColorPickerInputs() {
+      function updateFromUi() {
+        var rgb = getColorPickerRgb();
+        if (rgb) { setColorPickerUi(rgb); applyColorFromPicker(); }
+      }
+      function updateFromHex() {
+        var rgb = hexToRgb(colorHex.value);
+        if (rgb) { setColorPickerUi(rgb); applyColorFromPicker(); }
+      }
+      if (colorHex) { colorHex.addEventListener('input', updateFromHex); colorHex.addEventListener('change', updateFromHex); }
+      [colorSliderR, colorSliderG, colorSliderB].forEach(function (el) {
+        if (el) el.addEventListener('input', function () {
+          if (colorInputR) colorInputR.value = colorSliderR.value;
+          if (colorInputG) colorInputG.value = colorSliderG.value;
+          if (colorInputB) colorInputB.value = colorSliderB.value;
+          if (colorHex) colorHex.value = rgbToHex(getColorPickerRgb());
+          applyColorFromPicker();
+        });
       });
-
-      applyBtn.textContent = '반영됨';
-      applyBtn.disabled = true;
-      setTimeout(function () {
-        applyBtn.textContent = '미리보기에 반영';
-        updateApplyButton();
-      }, 2000);
-    });
-
-    /* 컬러 팔레트: 조정 시 배너에 즉시 반영, 되돌리기 */
-    if (colorPicker && slides.length > 0) {
-      colorPicker.addEventListener('input', function () {
-        var hex = colorPicker.value;
-        var rgb = hexToRgb(hex);
-        if (rgb) {
-          applySlideBg(slides[0], rgb);
-          if (firstClone) firstClone.style.setProperty('--slide-bg', rgb[0] + ',' + rgb[1] + ',' + rgb[2]);
-        }
+      [colorInputR, colorInputG, colorInputB].forEach(function (el) {
+        if (el) el.addEventListener('change', function () {
+          var r = parseInt(colorInputR.value, 10), g = parseInt(colorInputG.value, 10), b = parseInt(colorInputB.value, 10);
+          if (!isNaN(r) && !isNaN(g) && !isNaN(b)) {
+            setColorPickerUi([Math.max(0, Math.min(255, r)), Math.max(0, Math.min(255, g)), Math.max(0, Math.min(255, b))]);
+            applyColorFromPicker();
+          }
+        });
       });
     }
+    if (slides.length > 0) bindColorPickerInputs();
+
     if (colorResetBtn && slides.length > 0) {
       colorResetBtn.addEventListener('click', function () {
-        if (!defaultExtractedRgb) return;
-        applySlideBg(slides[0], defaultExtractedRgb);
-        if (firstClone) firstClone.style.setProperty('--slide-bg', defaultExtractedRgb[0] + ',' + defaultExtractedRgb[1] + ',' + defaultExtractedRgb[2]);
-        if (colorPicker) colorPicker.value = rgbToHex(defaultExtractedRgb);
+        if (!defaultExtractedRgb || !slides[currentPaletteSlideIndex]) return;
+        var rgb = defaultExtractedRgb;
+        applySlideBg(slides[currentPaletteSlideIndex], rgb);
+        if (currentPaletteSlideIndex === 0 && firstClone) firstClone.style.setProperty('--slide-bg', rgb[0] + ',' + rgb[1] + ',' + rgb[2]);
+        if (currentPaletteSlideIndex === totalReal - 1 && lastClone) lastClone.style.setProperty('--slide-bg', rgb[0] + ',' + rgb[1] + ',' + rgb[2]);
+        setColorPickerUi(rgb);
       });
     }
+
+    /* 스포이드(EyeDropper): 지원 시에만 활성화, 미지원 시 버튼 비활성 표시 */
+    (function initEyedropper() {
+      var btn = document.getElementById('color-eyedropper-btn');
+      if (!btn) return;
+      if (typeof window.EyeDropper === 'undefined') return;
+      try {
+        var dropper = new window.EyeDropper();
+        btn.addEventListener('click', function () {
+          dropper.open().then(function (result) {
+            var rgb = hexToRgb(result.sRGBHex);
+            if (rgb) { setColorPickerUi(rgb); applyColorFromPicker(); }
+          }).catch(function () {});
+        });
+        btn.classList.add('is-supported');
+      } catch (e) {}
+    })();
 
     /* 초기 주조색이 있으면 기본 주조색·피커·되돌리기 버튼 활성화 */
     (function initColorFromSlide() {
       var firstSlide = slides[0];
-      if (!firstSlide || !colorPicker) return;
+      if (!firstSlide || !colorHex) return;
       var bg = firstSlide.getAttribute('data-slide-bg') || firstSlide.style.getPropertyValue('--slide-bg') || (window.getComputedStyle && getComputedStyle(firstSlide).getPropertyValue('--slide-bg').trim());
       if (bg && /^\d+,\s*\d+,\s*\d+$/.test(bg.trim())) {
         var parts = bg.split(',').map(function (p) { return parseInt(p.trim(), 10); });
         if (parts.length === 3) {
-          var hex = rgbToHex(parts);
           defaultExtractedRgb = parts;
-          colorPicker.value = hex;
+          setColorPickerUi(parts);
           if (colorDefaultSwatch) {
-            colorDefaultSwatch.style.backgroundColor = hex;
+            colorDefaultSwatch.style.backgroundColor = rgbToHex(parts);
             colorDefaultSwatch.textContent = '';
             colorDefaultSwatch.classList.add('has-color');
           }
@@ -760,27 +883,135 @@
     })();
   })();
 
-  /* 탭 전환: 제작 프로세스 / 가이드 */
-  (function initGuideTabs() {
-    var tabProcess = document.getElementById('tab-process');
-    var tabGuide = document.getElementById('tab-guide');
-    var panelProcess = document.getElementById('panel-process');
-    var panelGuide = document.getElementById('panel-guide');
-    if (!tabProcess || !tabGuide || !panelProcess || !panelGuide) return;
+  /* 미리보기 뷰포트 너비 조절 (브라우저 내 레이어) */
+  (function initViewportToolbar() {
+    var viewport = document.getElementById('banner-viewport');
+    var range = document.getElementById('viewport-range');
+    var sizeEl = document.getElementById('viewport-size');
+    var presets = document.querySelectorAll('.viewport-preset');
+    if (!viewport) return;
 
-    function switchTo(id) {
-      var isProcess = id === 'panel-process';
-      tabProcess.classList.toggle('is-active', isProcess);
-      tabGuide.classList.toggle('is-active', !isProcess);
-      tabProcess.setAttribute('aria-selected', isProcess);
-      tabGuide.setAttribute('aria-selected', !isProcess);
-      panelProcess.classList.toggle('is-active', isProcess);
-      panelGuide.classList.toggle('is-active', !isProcess);
-      panelProcess.hidden = !isProcess;
-      panelGuide.hidden = isProcess;
+    function setWidth(w) {
+      var num = parseInt(w, 10);
+      if (isNaN(num)) return;
+      num = Math.max(320, Math.min(1440, num));
+      viewport.style.width = num + 'px';
+      /* 뷰포트 너비에 따라 모바일 레이아웃 클래스 적용(컨테이너 쿼리 미지원/버그 시에도 텍스트 노출) */
+      viewport.classList.toggle('banner-viewport--narrow', num <= 769);
+      viewport.classList.toggle('banner-viewport--narrow-sm', num <= 480);
+      if (range) range.value = num;
+      if (sizeEl) sizeEl.textContent = num + 'px';
+      presets.forEach(function (btn) {
+        var active = btn.getAttribute('data-width') === String(num);
+        btn.classList.toggle('is-active', active);
+        btn.setAttribute('aria-pressed', active);
+      });
     }
 
-    tabProcess.addEventListener('click', function () { switchTo('panel-process'); });
-    tabGuide.addEventListener('click', function () { switchTo('panel-guide'); });
+    presets.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        setWidth(btn.getAttribute('data-width'));
+      });
+    });
+    if (range) {
+      range.addEventListener('input', function () {
+        setWidth(range.value);
+      });
+    }
+
+    var resizeHandle = document.getElementById('banner-resize-handle');
+    if (resizeHandle) {
+      resizeHandle.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        var startX = e.clientX;
+        var startW = parseInt(viewport.style.width, 10) || parseInt(getComputedStyle(viewport).width, 10) || 1440;
+        function onMove(ev) {
+          var dx = ev.clientX - startX;
+          setWidth(startW + dx);
+        }
+        function onUp() {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+    }
+
+    setWidth(1440);
+  })();
+
+  /* LNB: 단계 클릭 시 우측 패널 전환 */
+  (function initGuideLnb() {
+    var lnbItems = document.querySelectorAll('.guide-lnb-item');
+    var panels = document.querySelectorAll('.guide-panel');
+    if (!lnbItems.length || !panels.length) return;
+
+    function showPanel(panelId) {
+      panels.forEach(function (p) {
+        var on = p.id === panelId;
+        p.classList.toggle('is-active', on);
+        p.hidden = !on;
+      });
+      lnbItems.forEach(function (btn) {
+        var isCurrent = btn.getAttribute('data-panel') === panelId;
+        btn.classList.toggle('is-active', isCurrent);
+        btn.setAttribute('aria-current', isCurrent ? 'true' : null);
+      });
+    }
+
+    lnbItems.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var panelId = btn.getAttribute('data-panel');
+        if (panelId) showPanel(panelId);
+      });
+    });
+  })();
+
+  /* 1번 단계: 이미지 첨부 / 이미지 검색 탭 전환 */
+  (function initImageSourceTabs() {
+    var tabAttach = document.getElementById('tab-image-attach');
+    var tabLink = document.getElementById('tab-image-link');
+    var tabSearch = document.getElementById('tab-image-search');
+    var panelAttach = document.getElementById('panel-image-attach');
+    var panelLink = document.getElementById('panel-image-link');
+    var panelSearch = document.getElementById('panel-image-search');
+    if (!tabAttach || !panelAttach) return;
+
+    function show(id) {
+      [tabAttach, tabLink, tabSearch].forEach(function (t) {
+        if (t) { t.classList.toggle('is-active', t.getAttribute('aria-controls') === id); t.setAttribute('aria-selected', t.getAttribute('aria-controls') === id); }
+      });
+      [panelAttach, panelLink, panelSearch].forEach(function (p) {
+        if (p) { p.classList.toggle('is-active', p.id === id); p.hidden = p.id !== id; }
+      });
+    }
+
+    if (tabAttach) tabAttach.addEventListener('click', function () { show('panel-image-attach'); });
+    if (tabLink) tabLink.addEventListener('click', function () { show('panel-image-link'); });
+    if (tabSearch) tabSearch.addEventListener('click', function () { show('panel-image-search'); });
+  })();
+
+  /* 가이드 인포 툴팁: 포커스/호버 시 표시 (접근성) */
+  (function initGuideInfoTooltip() {
+    var infoBtn = document.getElementById('guide-info-btn');
+    var tooltip = document.getElementById('guide-info-tooltip');
+    if (!infoBtn || !tooltip) return;
+
+    function showTooltip() {
+      tooltip.style.visibility = 'visible';
+      tooltip.style.opacity = '1';
+      infoBtn.setAttribute('aria-expanded', 'true');
+    }
+    function hideTooltip() {
+      tooltip.style.visibility = '';
+      tooltip.style.opacity = '';
+      infoBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    infoBtn.addEventListener('mouseenter', showTooltip);
+    infoBtn.addEventListener('mouseleave', hideTooltip);
+    infoBtn.addEventListener('focus', showTooltip);
+    infoBtn.addEventListener('blur', hideTooltip);
   })();
 })();

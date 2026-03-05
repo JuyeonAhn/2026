@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>반응형 배너 가이드</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -19,7 +20,11 @@
   </script>
 
   <div class="banner-case">
-    <div class="banner-slider" role="region" aria-label="메인 배너">
+    <div class="banner-preview-wrap">
+      <div class="banner-viewport-wrap">
+        <div class="banner-viewport" id="banner-viewport">
+          <div class="banner-resize-handle" id="banner-resize-handle" aria-label="배너 너비 조절"></div>
+        <div class="banner-slider" role="region" aria-label="메인 배너">
       <div class="banner-track">
         <!-- 슬라이드는 script에서 설정(banner-config) 기반으로 생성됩니다. 설정 없을 때만 아래 예시 사용 -->
         <section class="banner-slide" data-slide="0">
@@ -40,35 +45,71 @@
         <span aria-hidden="true">›</span>
       </button>
       <div class="banner-indicators" role="tablist" aria-label="배너 인디케이터"></div>
+        </div>
+        </div>
+      </div>
+      <div class="viewport-toolbar viewport-toolbar--below" role="toolbar" aria-label="너비 미리보기">
+        <span class="viewport-toolbar-label">너비 미리보기</span>
+        <div class="viewport-presets">
+          <button type="button" class="viewport-preset is-active" data-width="1440" aria-pressed="true">1440</button>
+          <button type="button" class="viewport-preset" data-width="768" aria-pressed="false">768</button>
+          <button type="button" class="viewport-preset" data-width="375" aria-pressed="false">375</button>
+        </div>
+        <div class="viewport-slider-wrap">
+          <input type="range" id="viewport-range" class="viewport-range" min="320" max="1440" value="1440" aria-label="미리보기 너비">
+          <span id="viewport-size" class="viewport-size" aria-live="polite">1440px</span>
+        </div>
+      </div>
     </div>
 
     <section class="production-guide" aria-label="배너 제작 가이드">
       <div class="guide-inner">
-      <h2 class="guide-heading">배너 제작 가이드</h2>
+      <header class="guide-header">
+        <h1 class="guide-heading">
+          배너 제작 가이드
+          <span class="guide-info-wrap">
+            <button type="button" class="guide-info-btn" aria-label="가이드 요약 보기" id="guide-info-btn">
+              <span class="material-symbols-outlined guide-info-icon" aria-hidden="true">info</span>
+            </button>
+            <span class="guide-info-tooltip" id="guide-info-tooltip" role="tooltip">
+              브레이크포인트: 1194px↑ 300px·32px/24px | 769~1193px 260px·22px/15px | 768px↓ 이미지·텍스트 분리 20px/14px. 타이틀 30자·서브 50자 제한. 주조색은 이미지에서 자동 추출. 슬라이드 무한 루핑.
+            </span>
+          </span>
+        </h1>
+      </header>
+      <h2 class="guide-process-title">제작 프로세스</h2>
 
-      <div class="guide-tabs" role="tablist" aria-label="제작 프로세스 / 가이드">
-        <button type="button" class="guide-tab is-active" role="tab" aria-selected="true" aria-controls="panel-process" id="tab-process">제작 프로세스</button>
-        <button type="button" class="guide-tab" role="tab" aria-selected="false" aria-controls="panel-guide" id="tab-guide">가이드</button>
-      </div>
+      <div class="guide-lnb-wrap">
+        <div class="guide-lnb-column">
+          <nav class="guide-lnb" aria-label="제작 단계">
+            <button type="button" class="guide-lnb-item is-active" data-panel="panel-step-1" id="lnb-step-1" aria-current="true"><span class="material-symbols-outlined guide-lnb-num" aria-hidden="true">looks_one</span> 이미지</button>
+            <button type="button" class="guide-lnb-item" data-panel="panel-step-2" id="lnb-step-2"><span class="material-symbols-outlined guide-lnb-num" aria-hidden="true">looks_two</span> 컬러</button>
+            <button type="button" class="guide-lnb-item" data-panel="panel-step-3" id="lnb-step-3"><span class="material-symbols-outlined guide-lnb-num" aria-hidden="true">looks_3</span> 텍스트</button>
+          </nav>
+        </div>
+        <div class="guide-content-area">
+          <div class="guide-panel is-active" id="panel-step-1" role="tabpanel" aria-labelledby="lnb-step-1">
+            <div class="image-source-tabs" role="tablist" aria-label="이미지 소스">
+              <button type="button" class="image-source-tab is-active" role="tab" aria-selected="true" aria-controls="panel-image-attach" id="tab-image-attach">이미지 첨부</button>
+              <button type="button" class="image-source-tab" role="tab" aria-selected="false" aria-controls="panel-image-link" id="tab-image-link">이미지 링크 삽입</button>
+              <button type="button" class="image-source-tab" role="tab" aria-selected="false" aria-controls="panel-image-search" id="tab-image-search">이미지 검색</button>
+            </div>
 
-      <!-- 탭 패널: 제작 프로세스 -->
-      <div class="guide-panel is-active" id="panel-process" role="tabpanel" aria-labelledby="tab-process">
-        <p class="guide-intro">위 미리보기는 배너 제작 툴입니다. 파일 또는 링크를 넣고 <strong>적용하기</strong>를 누르면 미리보기에 바로 반영되며, 이미지를 바꿔가며 여러 번 테스트할 수 있습니다. 텍스트·컬러를 정한 뒤 마지막에 <strong>미리보기에 반영</strong>으로 확정하세요.</p>
-
-        <div class="upload-process">
-          <div class="process-step upload-step">
-            <span class="process-num" aria-hidden="true">1</span>
-            <div class="process-body">
-              <h3 class="process-title">이미지 첨부</h3>
-              <p class="process-desc">배너로 사용할 이미지를 파일로 선택하거나, 이미지 주소(URL)를 입력한 뒤 각각 <strong>적용하기</strong>를 눌러 미리보기에 반영하세요. 여러 번 바꿔가며 테스트할 수 있습니다.</p>
-              <div class="upload-zone" id="upload-zone" role="button" tabindex="0" aria-label="이미지 선택 영역">
-                <input type="file" id="banner-file" accept="image/*" class="upload-input" aria-label="배너 이미지 파일 선택">
-                <span class="upload-placeholder" id="upload-placeholder">파일 선택 또는 여기에 이미지를 끌어다 놓으세요</span>
-                <span class="upload-filename" id="upload-filename" aria-live="polite"></span>
+            <div class="image-source-panels-wrap">
+            <div class="image-source-panel is-active" id="panel-image-attach" role="tabpanel" aria-labelledby="tab-image-attach">
+              <p class="guide-step-intro"><span class="material-symbols-outlined guide-step-intro-icon" aria-hidden="true">info</span>배너로 사용할 이미지를 파일 찾아 첨부하세요.</p>
+              <div class="upload-row-with-apply">
+                <div class="upload-zone" id="upload-zone" role="button" tabindex="0" aria-label="이미지 선택 영역">
+                  <input type="file" id="banner-file" accept="image/*" class="upload-input" aria-label="배너 이미지 파일 선택">
+                  <span class="upload-placeholder" id="upload-placeholder">파일 선택 또는 여기에 이미지를 끌어다 놓으세요</span>
+                  <span class="upload-filename" id="upload-filename" aria-live="polite"></span>
+                </div>
+                <button type="button" id="file-apply-btn" class="btn-apply-inline" disabled>파일 적용하기</button>
               </div>
-              <div class="upload-file-apply-row">
-                <button type="button" id="file-apply-btn" class="btn-url-apply" disabled>파일 적용하기</button>
-              </div>
+            </div>
+
+            <div class="image-source-panel" id="panel-image-link" role="tabpanel" aria-labelledby="tab-image-link" hidden>
+              <p class="guide-step-intro"><span class="material-symbols-outlined guide-step-intro-icon" aria-hidden="true">info</span>URL을 복사하여 적용하세요.</p>
               <div class="upload-url-row">
                 <label class="upload-label" for="banner-image-url">이미지 링크 (URL)</label>
                 <div class="upload-url-wrap">
@@ -76,136 +117,106 @@
                   <button type="button" id="url-apply-btn" class="btn-url-apply">링크 적용하기</button>
                 </div>
               </div>
+            </div>
 
-              <div class="image-search-section">
-                <h4 class="image-search-title">이미지 검색</h4>
-                <p class="image-search-desc">검색어를 입력하면 무료 이미지를 찾아 배너에 적용할 수 있습니다. <strong>Pexels</strong>는 가입 즉시 API 키 발급(심사 없음)으로 바로 테스트할 수 있습니다.</p>
-
-                <div class="image-search-tabs">
-                  <button type="button" class="image-search-tab is-active" data-source="pexels">Pexels (즉시 테스트 가능)</button>
-                  <button type="button" class="image-search-tab" data-source="unsplash">Unsplash</button>
-                </div>
-
-                <div class="image-search-form image-search-form--pexels">
-                  <label class="upload-label" for="pexels-key">Pexels API Key</label>
-                  <input type="text" id="pexels-key" class="upload-text" placeholder="pexels.com/api 에서 발급 (가입 즉시 발급)" autocomplete="off">
-                  <div class="image-search-row">
-                    <input type="text" id="image-search-query" class="upload-text image-search-input" placeholder="예: forest, ocean, product" aria-label="이미지 검색어">
-                    <button type="button" id="image-search-btn" class="btn-url-apply">검색</button>
+            <div class="image-source-panel" id="panel-image-search" role="tabpanel" aria-labelledby="tab-image-search" hidden>
+                <div class="image-search-section">
+                  <p class="guide-step-intro"><span class="material-symbols-outlined guide-step-intro-icon" aria-hidden="true">info</span>검색어를 입력하면 무료 이미지를 찾아 배너에 적용할 수 있습니다. Pexels는 가입 즉시 API 키 발급(심사 없음)으로 바로 테스트할 수 있습니다.</p>
+                  <div class="image-search-tabs">
+                    <button type="button" class="image-search-tab is-active" data-source="pexels">Pexels (즉시 테스트 가능)</button>
+                    <button type="button" class="image-search-tab" data-source="unsplash">Unsplash</button>
                   </div>
-                </div>
-
-                <div class="image-search-form image-search-form--unsplash" hidden>
-                  <label class="upload-label" for="unsplash-key">Unsplash Access Key</label>
-                  <input type="text" id="unsplash-key" class="upload-text" placeholder="Unsplash Developers에서 발급 (심사 필요)" autocomplete="off">
-                  <div class="image-search-row">
-                    <input type="text" id="unsplash-search-query" class="upload-text image-search-input" placeholder="예: forest, ocean" aria-label="Unsplash 검색어">
-                    <button type="button" id="unsplash-search-btn" class="btn-url-apply">검색</button>
+                  <div class="image-search-form image-search-form--pexels">
+                    <label class="upload-label" for="pexels-key">Pexels API Key</label>
+                    <input type="text" id="pexels-key" class="upload-text" placeholder="pexels.com/api 에서 발급 (가입 즉시 발급)" autocomplete="off">
+                    <div class="image-search-row">
+                      <input type="text" id="image-search-query" class="upload-text image-search-input" placeholder="예: forest, ocean, product" aria-label="이미지 검색어">
+                      <button type="button" id="image-search-btn" class="btn-url-apply">검색</button>
+                    </div>
                   </div>
+                  <div class="image-search-form image-search-form--unsplash" hidden>
+                    <label class="upload-label" for="unsplash-key">Unsplash Access Key</label>
+                    <input type="text" id="unsplash-key" class="upload-text" placeholder="Unsplash Developers에서 발급 (심사 필요)" autocomplete="off">
+                    <div class="image-search-row">
+                      <input type="text" id="unsplash-search-query" class="upload-text image-search-input" placeholder="예: forest, ocean" aria-label="Unsplash 검색어">
+                      <button type="button" id="unsplash-search-btn" class="btn-url-apply">검색</button>
+                    </div>
+                  </div>
+                  <div id="image-search-status" class="image-search-status" aria-live="polite"></div>
+                  <div id="image-search-results" class="image-search-results"></div>
                 </div>
-
-                <div id="image-search-status" class="image-search-status" aria-live="polite"></div>
-                <div id="image-search-results" class="image-search-results"></div>
-              </div>
+            </div>
             </div>
           </div>
 
-          <div class="process-step process-step--color">
-            <span class="process-num" aria-hidden="true">2</span>
+          <div class="guide-panel" id="panel-step-2" role="tabpanel" aria-labelledby="lnb-step-2" hidden>
+            <div class="image-source-tabs guide-panel-title-only" role="presentation">
+              <span class="image-source-tab is-active">컬러 팔레트</span>
+            </div>
+            <p class="guide-step-intro"><span class="material-symbols-outlined guide-step-intro-icon" aria-hidden="true">info</span>이미지 반영 시 추출된 기본 주조색을 확인하고, 필요 시 변경한 뒤 기본과 비교할 수 있습니다.</p>
             <div class="process-body">
-              <h3 class="process-title">컬러 팔레트</h3>
-              <p class="process-desc">이미지 반영 시 추출된 기본 주조색을 확인하고, 필요 시 변경한 뒤 기본과 비교할 수 있습니다.</p>
               <div class="color-palette">
                 <div class="color-palette-row">
                   <span class="color-palette-label">기본 주조색 (이미지에서 추출)</span>
                   <span class="color-swatch color-swatch--default" id="color-default-swatch" title="기본 주조색">이미지 반영 후 표시</span>
                 </div>
-                <div class="color-palette-row color-palette-row--edit">
-                  <span class="color-palette-label">주조색 변경하기</span>
-                  <div class="color-palette-edit">
-                    <input type="color" id="banner-color-picker" class="color-picker" value="#262a4d" aria-label="주조색 선택">
-                    <button type="button" id="color-reset-btn" class="btn-reset" disabled>추출된 기본 주조색 사용하기</button>
+                <div class="color-picker-attached">
+                  <div class="color-picker-attached-row color-picker-hex-row">
+                    <input type="text" id="banner-color-hex" class="color-picker-hex" value="#262a4d" maxlength="7" aria-label="주조색 HEX">
+                    <button type="button" id="color-eyedropper-btn" class="color-eyedropper-btn" title="화면에서 색 추출" aria-label="스포이드"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20L8 16m-2-2l10-10 4 4L10 18m-2-2l-4 4"/><path d="M14 6l4 4"/></svg></button>
+                    <button type="button" id="color-reset-btn" class="btn-reset color-reset-in-row" disabled>기본 주조색 되돌리기</button>
+                  </div>
+                  <div class="color-picker-sliders">
+                    <div class="color-picker-slider-row">
+                      <label class="color-picker-slider-label" for="color-slider-r">R</label>
+                      <input type="range" id="color-slider-r" class="color-picker-range" min="0" max="255" value="38" aria-label="Red">
+                      <input type="number" id="color-input-r" class="color-picker-num" min="0" max="255" value="38" aria-label="Red 값">
+                    </div>
+                    <div class="color-picker-slider-row">
+                      <label class="color-picker-slider-label" for="color-slider-g">G</label>
+                      <input type="range" id="color-slider-g" class="color-picker-range" min="0" max="255" value="42" aria-label="Green">
+                      <input type="number" id="color-input-g" class="color-picker-num" min="0" max="255" value="42" aria-label="Green 값">
+                    </div>
+                    <div class="color-picker-slider-row">
+                      <label class="color-picker-slider-label" for="color-slider-b">B</label>
+                      <input type="range" id="color-slider-b" class="color-picker-range" min="0" max="255" value="77" aria-label="Blue">
+                      <input type="number" id="color-input-b" class="color-picker-num" min="0" max="255" value="77" aria-label="Blue 값">
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="process-step">
-            <span class="process-num" aria-hidden="true">3</span>
+          <div class="guide-panel" id="panel-step-3" role="tabpanel" aria-labelledby="lnb-step-3" hidden>
+            <div class="image-source-tabs guide-panel-title-only" role="presentation">
+              <span class="image-source-tab is-active">타이틀·서브 입력</span>
+            </div>
+            <p class="guide-step-intro"><span class="material-symbols-outlined guide-step-intro-icon" aria-hidden="true">info</span>미리보기에 함께 표시할 텍스트를 입력하세요.</p>
             <div class="process-body">
-              <h3 class="process-title">타이틀·서브 입력 (필수)</h3>
-              <p class="process-desc">미리보기에 함께 표시할 텍스트를 입력하세요.</p>
-              <div class="upload-fields">
+              <div class="upload-fields upload-fields--text-step">
                 <label class="upload-label">
                   <span>타이틀 <em>(30자 이내)</em></span>
-                  <input type="text" id="banner-title-input" class="upload-text" placeholder="예: 환상의 밤, 빛나는 숲속 이야기" data-max="30">
+                  <div class="upload-input-with-apply">
+                    <input type="text" id="banner-title-input" class="upload-text" placeholder="예: 환상의 밤, 빛나는 숲속 이야기" data-max="30">
+                    <button type="button" id="text-apply-title-btn" class="btn-apply-inline btn-text-apply">적용하기</button>
+                  </div>
                   <span class="upload-msg upload-msg--error" id="title-msg" aria-live="polite"></span>
                 </label>
                 <label class="upload-label">
                   <span>서브 카피 <em>(50자 이내)</em></span>
-                  <input type="text" id="banner-sub-input" class="upload-text" placeholder="예: 몽환적인 발광 식물과 신비로운 생명들이 당신을 기다립니다." data-max="50">
+                  <div class="upload-input-with-apply">
+                    <input type="text" id="banner-sub-input" class="upload-text" placeholder="예: 몽환적인 발광 식물과 신비로운 생명들이 당신을 기다립니다." data-max="50">
+                    <button type="button" id="text-apply-sub-btn" class="btn-apply-inline btn-text-apply">적용하기</button>
+                  </div>
                   <span class="upload-msg upload-msg--error" id="sub-msg" aria-live="polite"></span>
                 </label>
               </div>
             </div>
           </div>
-
-          <div class="process-step">
-            <span class="process-num" aria-hidden="true">4</span>
-            <div class="process-body">
-              <h3 class="process-title">미리보기에 반영</h3>
-              <p class="process-desc">첨부한 이미지(와 입력한 텍스트·주조색)를 상단 배너의 첫 번째 슬라이드에 적용합니다.</p>
-              <button type="button" id="apply-preview-btn" class="btn-apply" disabled>미리보기에 반영</button>
-            </div>
-          </div>
-
-          <p class="process-hint">반영 후 상단 배너에서 노출 형태를 확인하세요. 창 크기를 조절해 반응형을 확인할 수 있습니다.</p>
         </div>
       </div>
 
-      <!-- 탭 패널: 가이드 -->
-      <div class="guide-panel" id="panel-guide" role="tabpanel" aria-labelledby="tab-guide" hidden>
-        <h3 class="guide-subheading">적용 규칙 (참고)</h3>
-        <p class="guide-note">아래 규칙은 위 미리보기에 자동 적용됩니다. 제작 시 준수할 사항입니다.</p>
-
-        <dl class="guide-list">
-          <dt>브레이크포인트 및 크기</dt>
-          <dd>
-            <ul>
-              <li><strong>1194px 이상:</strong> 배너 높이 300px 고정. 타이틀 32px, 서브 24px. 텍스트 좌측 정렬, 좌측 패딩 120px.</li>
-              <li><strong>769px ~ 1193px:</strong> 높이 260px. 타이틀 22px, 서브 15px. 좌측 정렬. 좌우 이동 버튼과 겹치지 않도록 패딩 88px.</li>
-              <li><strong>768px 이하:</strong> 이미지 영역(상단)과 텍스트 영역(하단) 분리. 타이틀 20px, 서브 14px. 텍스트 가운데 정렬.</li>
-              <li><strong>480px 이하:</strong> 이미지 높이 200px. 타이틀 18px, 서브 13px.</li>
-            </ul>
-          </dd>
-
-          <dt>텍스트 제한</dt>
-          <dd>
-            <ul>
-              <li><strong>타이틀:</strong> 30자 제한 (초과 시 말줄임 … 처리)</li>
-              <li><strong>서브 카피:</strong> 50자 제한 (초과 시 말줄임 … 처리)</li>
-            </ul>
-          </dd>
-
-          <dt>배경·딤드 그라데이션</dt>
-          <dd>
-            <ul>
-              <li>각 슬라이드 이미지에서 <strong>주조색을 추출</strong>해 배경색으로 사용. 동일 이미지면 항상 같은 색이 나오도록 안정화.</li>
-              <li><strong>1194px 이상 / 769~1193px:</strong> 딤드 그라데이션은 화면 너비의 <strong>좌측 50%</strong>만 적용. 좌(높은 오퍼시티) → 중간(투명)으로 이어짐.</li>
-              <li><strong>768px 이하:</strong> 이미지 하단 1/3만 딤드 적용. 상단 2/3는 이미지 그대로 노출, 텍스트 영역과 색으로 자연스럽게 연결.</li>
-            </ul>
-          </dd>
-
-          <dt>슬라이드 동작</dt>
-          <dd>
-            <ul>
-              <li><strong>무한 루핑:</strong> 마지막 장 → 다음 버튼 시 첫 장으로, 첫 장 → 이전 버튼 시 마지막 장으로 끊김 없이 이어짐.</li>
-              <li>좌우 이동 버튼과 하단 인디케이터로 이동 가능. 인디케이터는 현재 슬라이드 번호와 동기화됩니다.</li>
-            </ul>
-          </dd>
-        </dl>
-      </div>
       </div>
     </section>
   </div>
