@@ -404,7 +404,6 @@
       defaultExtractedRgb = toApply;
       if (colorDefaultSwatch) {
         colorDefaultSwatch.style.backgroundColor = rgbToHex(toApply);
-        colorDefaultSwatch.textContent = '';
         colorDefaultSwatch.classList.add('has-color');
       }
       setColorPickerUi(toApply);
@@ -424,7 +423,6 @@
         var hex = rgbToHex(rgb);
         if (colorDefaultSwatch) {
           colorDefaultSwatch.style.backgroundColor = hex;
-          colorDefaultSwatch.textContent = '';
           colorDefaultSwatch.classList.add('has-color');
         }
         setColorPickerUi(rgb);
@@ -436,7 +434,7 @@
           if (p) {
             var r = [parseInt(p[1], 10), parseInt(p[2], 10), parseInt(p[3], 10)];
             defaultExtractedRgb = r;
-            if (colorDefaultSwatch) { colorDefaultSwatch.style.backgroundColor = rgbToHex(r); colorDefaultSwatch.textContent = ''; colorDefaultSwatch.classList.add('has-color'); }
+            if (colorDefaultSwatch) { colorDefaultSwatch.style.backgroundColor = rgbToHex(r); colorDefaultSwatch.classList.add('has-color'); }
             setColorPickerUi(r);
             if (colorResetBtn) colorResetBtn.disabled = false;
           }
@@ -874,7 +872,6 @@
           setColorPickerUi(parts);
           if (colorDefaultSwatch) {
             colorDefaultSwatch.style.backgroundColor = rgbToHex(parts);
-            colorDefaultSwatch.textContent = '';
             colorDefaultSwatch.classList.add('has-color');
           }
           if (colorResetBtn) colorResetBtn.disabled = false;

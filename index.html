@@ -62,11 +62,11 @@
       </div>
     </div>
 
-    <section class="production-guide" aria-label="배너 제작 가이드">
+    <section class="production-guide" aria-label="배너 제작·적용 Tool Kit">
       <div class="guide-inner">
       <header class="guide-header">
         <h1 class="guide-heading">
-          배너 제작 가이드
+          배너 제작·적용 Tool Kit
           <span class="guide-info-wrap">
             <button type="button" class="guide-info-btn" aria-label="가이드 요약 보기" id="guide-info-btn">
               <span class="material-symbols-outlined guide-info-icon" aria-hidden="true">info</span>
@@ -122,28 +122,30 @@
             <div class="image-source-panel" id="panel-image-search" role="tabpanel" aria-labelledby="tab-image-search" hidden>
                 <div class="image-search-section">
                   <p class="guide-step-intro"><span class="material-symbols-outlined guide-step-intro-icon" aria-hidden="true">info</span>검색어를 입력하면 무료 이미지를 찾아 배너에 적용할 수 있습니다. Pexels는 가입 즉시 API 키 발급(심사 없음)으로 바로 테스트할 수 있습니다.</p>
-                  <div class="image-search-tabs">
-                    <button type="button" class="image-search-tab is-active" data-source="pexels">Pexels (즉시 테스트 가능)</button>
-                    <button type="button" class="image-search-tab" data-source="unsplash">Unsplash</button>
-                  </div>
-                  <div class="image-search-form image-search-form--pexels">
-                    <label class="upload-label" for="pexels-key">Pexels API Key</label>
-                    <input type="text" id="pexels-key" class="upload-text" placeholder="pexels.com/api 에서 발급 (가입 즉시 발급)" autocomplete="off">
-                    <div class="image-search-row">
-                      <input type="text" id="image-search-query" class="upload-text image-search-input" placeholder="예: forest, ocean, product" aria-label="이미지 검색어">
-                      <button type="button" id="image-search-btn" class="btn-url-apply">검색</button>
+                  <div class="image-search-frame">
+                    <div class="image-search-tabs">
+                      <button type="button" class="image-search-tab is-active" data-source="pexels">Pexels (즉시 테스트 가능)</button>
+                      <button type="button" class="image-search-tab" data-source="unsplash">Unsplash</button>
                     </div>
-                  </div>
-                  <div class="image-search-form image-search-form--unsplash" hidden>
-                    <label class="upload-label" for="unsplash-key">Unsplash Access Key</label>
-                    <input type="text" id="unsplash-key" class="upload-text" placeholder="Unsplash Developers에서 발급 (심사 필요)" autocomplete="off">
-                    <div class="image-search-row">
-                      <input type="text" id="unsplash-search-query" class="upload-text image-search-input" placeholder="예: forest, ocean" aria-label="Unsplash 검색어">
-                      <button type="button" id="unsplash-search-btn" class="btn-url-apply">검색</button>
+                    <div class="image-search-form image-search-form--pexels">
+                      <label class="upload-label" for="pexels-key">Pexels API Key</label>
+                      <input type="text" id="pexels-key" class="upload-text" placeholder="pexels.com/api 에서 발급 (가입 즉시 발급)" autocomplete="off">
+                      <div class="image-search-row">
+                        <input type="text" id="image-search-query" class="upload-text image-search-input" placeholder="예: forest, ocean, product" aria-label="이미지 검색어">
+                        <button type="button" id="image-search-btn" class="btn-url-apply">검색</button>
+                      </div>
                     </div>
+                    <div class="image-search-form image-search-form--unsplash" hidden>
+                      <label class="upload-label" for="unsplash-key">Unsplash Access Key</label>
+                      <input type="text" id="unsplash-key" class="upload-text" placeholder="Unsplash Developers에서 발급 (심사 필요)" autocomplete="off">
+                      <div class="image-search-row">
+                        <input type="text" id="unsplash-search-query" class="upload-text image-search-input" placeholder="예: forest, ocean" aria-label="Unsplash 검색어">
+                        <button type="button" id="unsplash-search-btn" class="btn-url-apply">검색</button>
+                      </div>
+                    </div>
+                    <div id="image-search-status" class="image-search-status" aria-live="polite"></div>
+                    <div id="image-search-results" class="image-search-results"></div>
                   </div>
-                  <div id="image-search-status" class="image-search-status" aria-live="polite"></div>
-                  <div id="image-search-results" class="image-search-results"></div>
                 </div>
             </div>
             </div>
@@ -156,15 +158,16 @@
             <p class="guide-step-intro"><span class="material-symbols-outlined guide-step-intro-icon" aria-hidden="true">info</span>이미지 반영 시 추출된 기본 주조색을 확인하고, 필요 시 변경한 뒤 기본과 비교할 수 있습니다.</p>
             <div class="process-body">
               <div class="color-palette">
-                <div class="color-palette-row">
-                  <span class="color-palette-label">기본 주조색 (이미지에서 추출)</span>
-                  <span class="color-swatch color-swatch--default" id="color-default-swatch" title="기본 주조색">이미지 반영 후 표시</span>
-                </div>
                 <div class="color-picker-attached">
-                  <div class="color-picker-attached-row color-picker-hex-row">
-                    <input type="text" id="banner-color-hex" class="color-picker-hex" value="#262a4d" maxlength="7" aria-label="주조색 HEX">
-                    <button type="button" id="color-eyedropper-btn" class="color-eyedropper-btn" title="화면에서 색 추출" aria-label="스포이드"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20L8 16m-2-2l10-10 4 4L10 18m-2-2l-4 4"/><path d="M14 6l4 4"/></svg></button>
-                    <button type="button" id="color-reset-btn" class="btn-reset color-reset-in-row" disabled>기본 주조색 되돌리기</button>
+                  <div class="color-picker-attached-row color-picker-actions-row">
+                    <div class="color-picker-actions-left">
+                      <button type="button" id="color-default-swatch" class="color-default-btn" title="이미지에서 추출된 기본 주조색"><span class="color-default-btn-label">이미지에서 추출된 기본 주조색</span></button>
+                      <button type="button" id="color-reset-btn" class="btn-reset color-reset-in-row" disabled>기본 주조색 되돌리기</button>
+                    </div>
+                    <div class="color-picker-hex-wrap">
+                      <button type="button" id="color-eyedropper-btn" class="color-eyedropper-btn" title="화면에서 색 추출" aria-label="스포이드"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20L8 16m-2-2l10-10 4 4L10 18m-2-2l-4 4"/><path d="M14 6l4 4"/></svg></button>
+                      <input type="text" id="banner-color-hex" class="color-picker-hex" value="#262a4d" maxlength="7" aria-label="주조색 HEX">
+                    </div>
                   </div>
                   <div class="color-picker-sliders">
                     <div class="color-picker-slider-row">
