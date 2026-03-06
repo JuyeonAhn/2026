@@ -79,9 +79,25 @@
         </h1>
       </header>
       <h2 class="guide-process-title">제작 프로세스</h2>
+      <div class="guide-process-divider-wrap" aria-hidden="true">
+        <span class="guide-process-divider-spacer"></span>
+        <span class="guide-process-divider"></span>
+      </div>
 
       <div class="guide-lnb-wrap">
         <div class="guide-lnb-column">
+          <div class="guide-lnb-dropdown" id="guide-lnb-dropdown">
+            <button type="button" class="guide-lnb-dropdown-trigger" id="guide-lnb-dropdown-trigger" aria-expanded="false" aria-haspopup="listbox" aria-controls="guide-lnb-dropdown-list" aria-label="제작 단계 선택">
+              <span class="guide-lnb-num-circle" aria-hidden="true">1</span>
+              <span class="guide-lnb-dropdown-trigger-text">이미지</span>
+              <span class="guide-lnb-dropdown-chevron" aria-hidden="true">&#9660;</span>
+            </button>
+            <div class="guide-lnb-dropdown-list" id="guide-lnb-dropdown-list" role="listbox" aria-hidden="true" hidden>
+              <button type="button" class="guide-lnb-dropdown-option is-selected" role="option" aria-selected="true" data-panel="panel-step-1"><span class="guide-lnb-num-circle" aria-hidden="true">1</span> 이미지</button>
+              <button type="button" class="guide-lnb-dropdown-option" role="option" aria-selected="false" data-panel="panel-step-2"><span class="guide-lnb-num-circle" aria-hidden="true">2</span> 컬러</button>
+              <button type="button" class="guide-lnb-dropdown-option" role="option" aria-selected="false" data-panel="panel-step-3"><span class="guide-lnb-num-circle" aria-hidden="true">3</span> 텍스트</button>
+            </div>
+          </div>
           <nav class="guide-lnb" aria-label="제작 단계">
             <button type="button" class="guide-lnb-item is-active" data-panel="panel-step-1" id="lnb-step-1" aria-current="true"><span class="guide-lnb-num-circle" aria-hidden="true">1</span> 이미지</button>
             <button type="button" class="guide-lnb-item" data-panel="panel-step-2" id="lnb-step-2"><span class="guide-lnb-num-circle" aria-hidden="true">2</span> 컬러</button>
@@ -90,10 +106,16 @@
         </div>
         <div class="guide-content-area">
           <div class="guide-panel is-active" id="panel-step-1" role="tabpanel" aria-labelledby="lnb-step-1">
-            <div class="image-source-tabs" role="tablist" aria-label="이미지 소스">
-              <button type="button" class="image-source-tab is-active" role="tab" aria-selected="true" aria-controls="panel-image-attach" id="tab-image-attach">이미지 첨부</button>
-              <button type="button" class="image-source-tab" role="tab" aria-selected="false" aria-controls="panel-image-link" id="tab-image-link">이미지 링크 삽입</button>
-              <button type="button" class="image-source-tab" role="tab" aria-selected="false" aria-controls="panel-image-search" id="tab-image-search">이미지 검색</button>
+            <div class="image-source-tabs-outer">
+              <button type="button" class="tabs-nav tabs-nav--prev" id="tabs-nav-prev" aria-label="이전 탭" hidden><span aria-hidden="true">‹</span></button>
+              <div class="image-source-tabs-scroll" id="image-source-tabs-scroll">
+                <div class="image-source-tabs" role="tablist" aria-label="이미지 소스">
+                  <button type="button" class="image-source-tab is-active" role="tab" aria-selected="true" aria-controls="panel-image-attach" id="tab-image-attach">이미지 첨부</button>
+                  <button type="button" class="image-source-tab" role="tab" aria-selected="false" aria-controls="panel-image-link" id="tab-image-link">이미지 링크 삽입</button>
+                  <button type="button" class="image-source-tab" role="tab" aria-selected="false" aria-controls="panel-image-search" id="tab-image-search">이미지 검색</button>
+                </div>
+              </div>
+              <button type="button" class="tabs-nav tabs-nav--next" id="tabs-nav-next" aria-label="다음 탭" hidden><span aria-hidden="true">›</span></button>
             </div>
 
             <div class="image-source-panels-wrap">
@@ -117,6 +139,7 @@
                   <input type="url" id="banner-image-url" class="upload-text upload-url" placeholder="https://example.com/image.jpg" aria-label="이미지 URL">
                   <button type="button" id="url-apply-btn" class="btn-url-apply">링크 적용하기</button>
                 </div>
+                <p id="url-apply-msg" class="upload-msg upload-msg--url" aria-live="polite"></p>
               </div>
             </div>
 

@@ -210,6 +210,36 @@
     var isPortrait = img.naturalWidth > 0 && img.naturalHeight > img.naturalWidth;
     slide.classList.toggle('banner-slide--portrait', !!isPortrait);
     if (slide === slides[0] && firstClone) firstClone.classList.toggle('banner-slide--portrait', !!isPortrait);
+    if (isPortrait) {
+      requestAnimationFrame(updatePortraitGradient);
+    } else {
+      slide.style.removeProperty('--gradient-start');
+      slide.style.removeProperty('--gradient-end');
+      if (firstClone && slide === slides[0]) {
+        firstClone.style.removeProperty('--gradient-start');
+        firstClone.style.removeProperty('--gradient-end');
+      }
+    }
+  }
+
+  /* 세로형 이미지: 실제 이미지 너비·위치 기준으로 가로형 그라데이션 100%·0% 지점 계산 */
+  function updatePortraitGradient() {
+    var list = [];
+    slides.forEach(function (s) {
+      if (s.classList.contains('banner-slide--portrait')) list.push(s);
+    });
+    if (firstClone && firstClone.classList.contains('banner-slide--portrait')) list.push(firstClone);
+    list.forEach(function (slide) {
+      var img = slide.querySelector('.banner-image');
+      if (!img) return;
+      var slideR = slide.getBoundingClientRect();
+      var imgR = img.getBoundingClientRect();
+      if (slideR.width <= 0) return;
+      var startPct = ((imgR.left - slideR.left) / slideR.width) * 100;
+      var endPct = ((imgR.left - slideR.left + imgR.width / 3) / slideR.width) * 100;
+      slide.style.setProperty('--gradient-start', startPct + '%');
+      slide.style.setProperty('--gradient-end', endPct + '%');
+    });
   }
 
   /* 주조색은 이미지 로드 후에만 추출. 추출 완료 시 해당 슬라이드가 현재면 팔레트 동기화 */
@@ -226,6 +256,15 @@
     img.addEventListener('load', onReady);
     if (img.complete) onReady();
   });
+
+  (function observeViewportForGradient() {
+    var viewportEl = document.getElementById('banner-viewport');
+    if (!viewportEl || typeof ResizeObserver === 'undefined') return;
+    var ro = new ResizeObserver(function () {
+      requestAnimationFrame(updatePortraitGradient);
+    });
+    ro.observe(viewportEl);
+  })();
 
   function getLogicalIndex() {
     if (current === 0) return totalReal - 1;
@@ -458,30 +497,66 @@
     }
 
     /* URL로 배너 이미지 적용 (링크 적용 / 이미지 검색 결과 공용) */
+    var urlApplyMsg = document.getElementById('url-apply-msg');
+    function setUrlApplyMsg(text, isError) {
+      if (!urlApplyMsg) return;
+      urlApplyMsg.textContent = text || '';
+      urlApplyMsg.classList.toggle('upload-msg--error', !!isError);
+    }
     function applyImageUrlToBanner(imageUrl) {
       if (!imageUrl || !track || slides.length === 0) return;
       var firstSlide = slides[0];
       var img = firstSlide.querySelector('.banner-image');
       if (!img) return;
-      img.crossOrigin = 'anonymous';
-      img.src = imageUrl;
+      setUrlApplyMsg('적용 중…', false);
       img.style.display = '';
+      function onLoad() {
+        img.removeEventListener('load', onLoad);
+        img.removeEventListener('error', onError);
+        setUrlApplyMsg('적용되었습니다.', false);
+        if (typeof checkPortrait === 'function') checkPortrait(img);
+        setTimeout(function () { setUrlApplyMsg(''); }, 2000);
+        try {
+          extractDominantColor(img, function (rgb) {
+            updateFirstSlideColorAndPalette(rgb);
+          });
+        } catch (e) { /* CORS로 추출 실패 시 무시 */ }
+      }
+      function onError() {
+        img.removeEventListener('load', onLoad);
+        img.removeEventListener('error', onError);
+        if (img.crossOrigin === 'anonymous') {
+          img.crossOrigin = '';
+          img.src = imageUrl;
+          if (firstClone) {
+            var c = firstClone.querySelector('.banner-image');
+            if (c) { c.crossOrigin = ''; c.src = imageUrl; }
+          }
+          img.addEventListener('load', onLoad);
+          img.addEventListener('error', function () {
+            setUrlApplyMsg('이미지를 불러올 수 없습니다. URL과 접근 권한을 확인하세요.', true);
+          });
+        } else {
+          setUrlApplyMsg('이미지를 불러올 수 없습니다. URL과 접근 권한을 확인하세요.', true);
+        }
+      }
+      img.crossOrigin = 'anonymous';
+      img.addEventListener('load', onLoad);
+      img.addEventListener('error', onError);
+      img.src = imageUrl;
       if (firstClone) {
         var cloneImg = firstClone.querySelector('.banner-image');
         if (cloneImg) {
-          cloneImg.crossOrigin = 'anonymous';
+          cloneImg.crossOrigin = img.crossOrigin;
           cloneImg.src = imageUrl;
           cloneImg.style.display = '';
         }
       }
-      img.addEventListener('load', function onUrlLoad() {
-        img.removeEventListener('load', onUrlLoad);
-        if (typeof checkPortrait === 'function') checkPortrait(img);
-      });
-      if (img.complete && typeof checkPortrait === 'function') checkPortrait(img);
-      extractDominantColor(img, function (rgb) {
-        updateFirstSlideColorAndPalette(rgb);
-      });
+      if (img.complete) {
+        img.removeEventListener('load', onLoad);
+        img.removeEventListener('error', onError);
+        onLoad();
+      }
     }
 
     function checkTitleSub() {
@@ -938,11 +1013,43 @@
     setWidth(1440);
   })();
 
-  /* LNB: 단계 클릭 시 우측 패널 전환 */
+  /* LNB: 단계 클릭 시 우측 패널 전환. 모바일에서는 커스텀 드롭다운과 동기화 */
   (function initGuideLnb() {
     var lnbItems = document.querySelectorAll('.guide-lnb-item');
     var panels = document.querySelectorAll('.guide-panel');
+    var dropdown = document.getElementById('guide-lnb-dropdown');
+    var dropdownTrigger = document.getElementById('guide-lnb-dropdown-trigger');
+    var dropdownList = document.getElementById('guide-lnb-dropdown-list');
+    var dropdownOptions = dropdownList ? dropdownList.querySelectorAll('.guide-lnb-dropdown-option') : [];
+    var triggerNum = dropdownTrigger ? dropdownTrigger.querySelector('.guide-lnb-num-circle') : null;
+    var triggerText = dropdownTrigger ? dropdownTrigger.querySelector('.guide-lnb-dropdown-trigger-text') : null;
     if (!lnbItems.length || !panels.length) return;
+
+    var optionLabels = {
+      'panel-step-1': { num: '1', text: '이미지' },
+      'panel-step-2': { num: '2', text: '컬러' },
+      'panel-step-3': { num: '3', text: '텍스트' }
+    };
+
+    function updateDropdownUi(panelId) {
+      if (!dropdownTrigger || !dropdownList) return;
+      var label = optionLabels[panelId];
+      if (label && triggerNum) triggerNum.textContent = label.num;
+      if (label && triggerText) triggerText.textContent = label.text;
+      dropdownOptions.forEach(function (opt) {
+        var on = opt.getAttribute('data-panel') === panelId;
+        opt.classList.toggle('is-selected', on);
+        opt.setAttribute('aria-selected', on);
+      });
+    }
+
+    function closeDropdown() {
+      if (dropdown) {
+        dropdown.classList.remove('is-open');
+        if (dropdownList) { dropdownList.hidden = true; dropdownList.setAttribute('aria-hidden', 'true'); }
+        if (dropdownTrigger) dropdownTrigger.setAttribute('aria-expanded', 'false');
+      }
+    }
 
     function showPanel(panelId) {
       panels.forEach(function (p) {
@@ -955,6 +1062,7 @@
         btn.classList.toggle('is-active', isCurrent);
         btn.setAttribute('aria-current', isCurrent ? 'true' : null);
       });
+      updateDropdownUi(panelId);
     }
 
     lnbItems.forEach(function (btn) {
@@ -963,6 +1071,26 @@
         if (panelId) showPanel(panelId);
       });
     });
+
+    if (dropdownTrigger && dropdownList) {
+      dropdownTrigger.addEventListener('click', function () {
+        var isOpen = dropdown.classList.toggle('is-open');
+        dropdownTrigger.setAttribute('aria-expanded', isOpen);
+        dropdownList.hidden = !isOpen;
+        dropdownList.setAttribute('aria-hidden', !isOpen);
+      });
+      dropdownOptions.forEach(function (opt) {
+        opt.addEventListener('click', function () {
+          var panelId = opt.getAttribute('data-panel');
+          if (panelId) showPanel(panelId);
+          closeDropdown();
+        });
+      });
+      document.addEventListener('click', function (e) {
+        if (dropdown && dropdown.contains(e.target)) return;
+        closeDropdown();
+      });
+    }
   })();
 
   /* 1번 단계: 이미지 첨부 / 이미지 검색 탭 전환 */
@@ -987,6 +1115,38 @@
     if (tabAttach) tabAttach.addEventListener('click', function () { show('panel-image-attach'); });
     if (tabLink) tabLink.addEventListener('click', function () { show('panel-image-link'); });
     if (tabSearch) tabSearch.addEventListener('click', function () { show('panel-image-search'); });
+
+    /* 탭 넘침 시 좌우 화살표로만 이동 (스크롤바 없음) */
+    var tabsScrollEl = document.getElementById('image-source-tabs-scroll');
+    var tabsListEl = tabsScrollEl ? tabsScrollEl.querySelector('.image-source-tabs') : null;
+    var btnPrev = document.getElementById('tabs-nav-prev');
+    var btnNext = document.getElementById('tabs-nav-next');
+    if (tabsScrollEl && tabsListEl && btnPrev && btnNext) {
+      function updateTabsNav() {
+        var scrollW = tabsScrollEl.scrollWidth;
+        var clientW = tabsScrollEl.clientWidth;
+        var overflow = scrollW > clientW;
+        btnPrev.hidden = !overflow;
+        btnNext.hidden = !overflow;
+        if (!overflow) return;
+        btnPrev.disabled = tabsScrollEl.scrollLeft <= 0;
+        btnNext.disabled = tabsScrollEl.scrollLeft >= scrollW - clientW - 1;
+      }
+      function scrollTabs(direction) {
+        var step = Math.max(100, tabsScrollEl.clientWidth * 0.5);
+        tabsScrollEl.scrollLeft += direction === 'prev' ? -step : step;
+        requestAnimationFrame(updateTabsNav);
+      }
+      btnPrev.addEventListener('click', function () { scrollTabs('prev'); });
+      btnNext.addEventListener('click', function () { scrollTabs('next'); });
+      tabsScrollEl.addEventListener('scroll', updateTabsNav);
+      if (typeof ResizeObserver !== 'undefined') {
+        var ro = new ResizeObserver(updateTabsNav);
+        ro.observe(tabsScrollEl);
+      }
+      window.addEventListener('resize', updateTabsNav);
+      updateTabsNav();
+    }
   })();
 
   /* 가이드 인포 툴팁: 포커스/호버 시 표시 (접근성) */
